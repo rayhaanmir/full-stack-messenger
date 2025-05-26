@@ -1,0 +1,15 @@
+.text-area {
+  resize: none;
+  min-width: 23rem;
+  height: 5rem;
+  border-radius: 0.5rem;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+
+.text-area:focus {
+  border-color: #ff7070;
+}

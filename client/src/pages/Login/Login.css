@@ -1,0 +1,13 @@
+.login-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.sign-in-button {
+  border-radius: 0;
+  padding: 0.2rem;
+}
+
+.sign-in-button:active {
+  background-color:#868686;
+}
