@@ -29,40 +29,54 @@ app.get("/", (res) => {
   res.status(403).send("GET requests to / are not allowed\n");
 });
 
-app.post("/api/create-user", async (req, res) => {
-  const { userId } = req.body;
+// app.post("/api/create-user", async (req, res) => {
+//   const { userId } = req.body;
 
-  if (!userId || typeof userId !== "string") {
-    return res.status(400).json({ error: "Invalid userId" });
-  }
+//   if (!userId || typeof userId !== "string") {
+//     return res.status(400).json({ error: "Invalid userId" });
+//   }
 
-  const existing = await User.findOne({ userId });
-  if (existing) {
-    return res.status(409).json({ error: "Username taken" });
-  }
+//   const existing = await User.findOne({ userId });
+//   if (existing) {
+//     return res.status(409).json({ error: "Username taken" });
+//   }
 
-  await User.create({ userId });
-  return res.status(201).json({ message: "User created" });
-});
+//   await User.create({ userId });
+//   return res.status(201).json({ message: "User created" });
+// });
 
 io.on("connection", async (socket) => {
   console.log(`a user has connected from the socket "${socket.id}"`);
+
   socket.on("custom-event", (msg) => {
     console.clear();
     process.stdout.write(msg); // No newline
   });
+
   socket.on("validate-username", async (name, callback) => {
     const userExists = await User.findOne({ userId: name });
     callback(!!userExists);
   });
-  socket.on("save-message", async (text) => {
-    try {
-      const msg = await Message.create({ text });
-      console.log("Saved message");
-    } catch {
-      console.error("Error saving message");
+
+  socket.on(
+    "send-message",
+    async (sender, receivers, text, chatId, messageSent) => {
+      try {
+        const msg = await Message.create({
+          sender,
+          receivers,
+          text,
+          chatId,
+        });
+        console.log(`Saved message "${msg.id}"`);
+        messageSent(true);
+      } catch (e) {
+        console.error(e);
+        messageSent(false);
+      }
     }
-  });
+  );
+
   socket.on("disconnect", () => {
     console.log(`user disconnected from "${socket.id}`);
   });

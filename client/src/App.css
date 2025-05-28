@@ -9,13 +9,3 @@
   display: flex;
   flex-direction: column;
 }
-
-.button {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  transition: background-color ease 0.1s;
-}
-
-.button:active {
-  background-color: #505050;
-}

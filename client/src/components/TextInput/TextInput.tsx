@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import "./TextInput.css";
 
 interface TextInputProps {

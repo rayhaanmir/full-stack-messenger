@@ -3,6 +3,12 @@
   flex-direction: column;
 }
 
+.username-input {
+  outline: none;
+  border-radius: 0;
+  border-style: solid;
+}
+
 .sign-in-button {
   border-radius: 0;
   padding: 0.2rem;

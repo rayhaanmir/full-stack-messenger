@@ -17,16 +17,9 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const userId = localStorage.getItem("userId");
-    if (!userId) return;
-
-    socketRef.current = io("http://192.168.1.30:3000", {
-      query: { userId },
-    });
-
-    return () => {
-      socketRef.current?.disconnect();
-    };
+    if (!socketRef.current) {
+      socketRef.current = io("http://192.168.1.30:3000");
+    }
   }, []);
 
   return (
@@ -50,13 +43,18 @@ const App = () => {
                 localStorage.setItem("userId", id);
                 setUserId(id);
               }}
+              socket={socketRef.current}
             />
           }
         />
         <Route
           path="/home"
           element={
-            userId ? <Home userId={userId} /> : <Navigate to="/login" replace />
+            userId ? (
+              <Home userId={userId} socket={socketRef.current} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
           }
         />
       </Routes>
