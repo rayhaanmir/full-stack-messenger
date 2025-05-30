@@ -1,8 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import type { Socket } from "socket.io-client";
-import Dropdown from "../../components/Dropdown/Dropdown";
-import type { DropdownItemProps } from "../../components/Dropdown/Item/DropdownItem";
+import Dropdown from "../../components/Dropdown/Dropdown.tsx";
+import type { DropdownItemProps } from "../../components/Dropdown/Item/DropdownItem.tsx";
+import CreateConversationForm from "../../components/CreateConversationForm/CreateConversationForm.tsx";
 import "./Home.css";
 
 interface HomeProps {
@@ -11,15 +12,16 @@ interface HomeProps {
 }
 
 const Home = ({ userId, socket }: HomeProps) => {
-  const [name, setName] = useState<string>("");
-  const [groupChatName, setGroupChatName] = useState<string>("");
   const [message, setMessage] = useState<string>("");
+  const [showCreateConversation, setShowCreateConversation] =
+    useState<boolean>(false);
+  const [members, setMembers] = useState<string>("");
+  const [groupName, setGroupName] = useState<string>("");
   const navigate = useNavigate();
   const items: DropdownItemProps[] = [
     {
       label: "Create conversation",
-      action: () =>
-        window.open("https://www.youtube.com", "_blank", "noopener,noreferrer"),
+      action: () => setShowCreateConversation(true),
     },
   ];
 
@@ -34,65 +36,129 @@ const Home = ({ userId, socket }: HomeProps) => {
     textarea.style.height = textarea.scrollHeight + "px";
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  // const handleSubmitMessage = (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+  //   const chatId = userId + "_" + name;
+  //   socket?.emit(
+  //     "send-message",
+  //     userId,
+  //     [name],
+  //     message,
+  //     chatId,
+  //     (successful: boolean) => {
+  //       if (successful) {
+  //         console.log(`Message sent to ${name}`);
+  //       } else {
+  //         alert("Message failed to send");
+  //         setName("");
+  //       }
+  //       setMessage("");
+  //     }
+  //   );
+  // };
+
+  const handleSubmitConversation = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const chatId = userId + "_" + name;
+    const membersNoWhitespace: string = members.replace(/\s/g, "");
+    const memberArray: string[] = membersNoWhitespace.split(",");
+    let isDM: boolean = false;
+    if (memberArray.length === 0) {
+      alert("Member list cannot be empty");
+      return;
+    }
+    if (memberArray.length === 1) {
+      isDM = true;
+      if (!groupName) {
+        setGroupName(memberArray[0]);
+      }
+    } else {
+      if (!groupName) {
+        alert("Group name cannout be empty");
+        return;
+      }
+    }
     socket?.emit(
-      "send-message",
-      userId,
-      [name],
-      message,
-      chatId,
+      "create-conversation",
+      groupName,
+      isDM,
+      memberArray,
       (successful: boolean) => {
         if (successful) {
-          console.log(`Message sent to ${name}`);
+          console.log(`Conversation created`);
         } else {
-          alert("Message failed to send");
-          setName("");
+          alert("Failed to create conversation");
         }
-        setMessage("");
+        setMembers("");
+        setGroupName("");
       }
     );
   };
 
   return (
     <>
-      <div className="top-wrapper">
-        <Dropdown buttonText="Select a conversation" content={{ items }} />
+      <div
+        className="top-wrapper"
+        style={
+          showCreateConversation
+            ? { filter: "blur(0.1rem)", pointerEvents: "none" }
+            : {}
+        }
+      >
+        <Dropdown
+          buttonText="Select a conversation"
+          content={{ items }}
+          showCreateConversation={showCreateConversation}
+        />
       </div>
-      <div>
-        <h1>Welcome, {userId}!</h1>
-        <form className="message-form" onSubmit={handleSubmit}>
-          <input
-            className="basic-input"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="User to message"
-          />
-          <input
-            className="basic-input"
-            value={groupChatName}
-            onChange={(e) => setGroupChatName(e.target.value)}
-            placeholder="Group Chat Name (Optional for DMs)"
-            style={{ borderTopWidth: 0 }}
-          />
-          <textarea
-            className="message-body"
-            value={message}
-            onChange={handleChange}
-            placeholder="Type message here"
-          />
-          <button type="submit" className="message-button">
-            Send message
-          </button>
-        </form>
+      <div
+        className="middle-wrapper"
+        style={
+          showCreateConversation
+            ? { filter: "blur(0.1rem)", pointerEvents: "none" }
+            : {}
+        }
+      >
+        <div tabIndex={-1}>
+          <h1>Welcome, {userId}!</h1>
+          <form className="message-form" /*onSubmit={handleSubmitMessage}*/>
+            <textarea
+              className="message-body"
+              value={message}
+              onChange={handleChange}
+              placeholder="Type message here"
+              tabIndex={showCreateConversation ? -1 : 0}
+            />
+            <button
+              className="message-button"
+              type="submit"
+              tabIndex={showCreateConversation ? -1 : 0}
+            >
+              Send message
+            </button>
+          </form>
+        </div>
       </div>
+      <CreateConversationForm
+        showCreateConversation={showCreateConversation}
+        onClose={() => setShowCreateConversation(false)}
+        onCreate={handleSubmitConversation}
+        members={members}
+        setMembers={setMembers}
+        groupName={groupName}
+        setGroupName={setGroupName}
+      />
       <div className="bottom-wrapper">
         <p>
           Not you?{" "}
           <span
             onClick={navigateLogin}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                navigateLogin();
+              }
+            }}
             style={{ color: "#ADC2FC", cursor: "pointer", display: "inline" }}
+            tabIndex={0}
           >
             Log in here.
           </span>

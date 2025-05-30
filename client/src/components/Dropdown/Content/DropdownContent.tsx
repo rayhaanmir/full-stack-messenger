@@ -7,9 +7,14 @@ import "./DropdownContent.css";
 export interface DropdownContentProps {
   items: DropdownItemProps[];
   open?: boolean;
+  showCreateConversation?: boolean;
 }
 
-const DropdownContent = ({ items, open = false }: DropdownContentProps) => {
+const DropdownContent = ({
+  items,
+  open = false,
+  showCreateConversation = false,
+}: DropdownContentProps) => {
   const [height, setHeight] = useState<number>(0);
   const ref = useRef<HTMLUListElement>(null);
   useEffect(() => {
@@ -20,8 +25,13 @@ const DropdownContent = ({ items, open = false }: DropdownContentProps) => {
   return (
     <ul
       ref={ref}
-      className={`dropdown-content ${open ? "content-open" : null}`}
-      style={open ? { maxHeight: `min(${height}px, 500px)` } : {}}
+      className={`dropdown-content${open ? " content-open" : ""}`}
+      style={
+        open
+          ? { maxHeight: `min(${height}px, 500px)`, pointerEvents: "auto" }
+          : {}
+      }
+      tabIndex={-1}
     >
       {items.map((item, index) => {
         const isFirst = index === 0;
@@ -34,6 +44,8 @@ const DropdownContent = ({ items, open = false }: DropdownContentProps) => {
             action={item.action}
             icon={isOnly || isFirst ? FaPlus : undefined}
             removeBottom={isOnly || isLast}
+            open={open}
+            showCreateConversation={showCreateConversation}
           />
         );
       })}

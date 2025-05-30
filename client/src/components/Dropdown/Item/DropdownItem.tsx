@@ -7,6 +7,8 @@ export interface DropdownItemProps {
   action: () => void;
   icon?: IconType;
   removeBottom?: boolean;
+  open?: boolean;
+  showCreateConversation?: boolean;
 }
 
 const DropdownItem = ({
@@ -14,28 +16,21 @@ const DropdownItem = ({
   action,
   icon: Icon,
   removeBottom = false,
+  open = false,
+  showCreateConversation = false,
 }: DropdownItemProps) => {
-  const [hovered, setHovered] = useState<boolean>(false);
-
   return (
     <li
       className="dropdown-item"
       title={label}
       onClick={action}
-      onMouseEnter={() => {
-        setHovered(true);
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          action();
+        }
       }}
-      onMouseLeave={() => {
-        setHovered(false);
-      }}
-      style={
-        removeBottom
-          ? {
-              backgroundColor: hovered ? "#7f7f7f" : "transparent",
-              borderBottom: "0",
-            }
-          : { backgroundColor: hovered ? "#7f7f7f" : "transparent" }
-      }
+      style={removeBottom ? { borderBottom: "0" } : {}}
+      tabIndex={open && !showCreateConversation ? 0 : -1}
     >
       {label}
       {Icon && (

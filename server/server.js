@@ -5,6 +5,7 @@ import cors from "cors";
 import mongoose from "mongoose";
 import User from "./models/User.js";
 import Message from "./models/Message.js";
+import Conversation from "./models/Conversation.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -73,6 +74,24 @@ io.on("connection", async (socket) => {
       } catch (e) {
         console.error(e);
         messageSent(false);
+      }
+    }
+  );
+
+  socket.on(
+    "create-conversation",
+    async (chatId, isDM, members, conversationCreated) => {
+      try {
+        const conversation = await Conversation.create({
+          chatId,
+          isDM,
+          members,
+        });
+        console.log(`Saved conversation "${conversation.id}"`);
+        conversationCreated(true);
+      } catch (e) {
+        console.error(e);
+        conversationCreated(false);
       }
     }
   );

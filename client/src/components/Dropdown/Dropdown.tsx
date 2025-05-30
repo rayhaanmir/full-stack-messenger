@@ -7,14 +7,28 @@ import "./Dropdown.css";
 interface DropdownProps {
   buttonText: string;
   content?: DropdownContentProps;
+  showCreateConversation: boolean;
 }
 
-const Dropdown = ({ buttonText, content = { items: [] } }: DropdownProps) => {
+const Dropdown = ({
+  buttonText,
+  content = { items: [] },
+  showCreateConversation,
+}: DropdownProps) => {
   const [open, setOpen] = useState<boolean>(false);
   return (
     <div className="dropdown">
-      <DropdownButton text={buttonText} setOpen={setOpen} open={open} />
-      <DropdownContent {...content} open={open} />
+      <DropdownButton
+        text={buttonText}
+        setOpen={setOpen}
+        open={open}
+        showCreateConversation={showCreateConversation}
+      />
+      <DropdownContent
+        {...content}
+        open={open}
+        showCreateConversation={showCreateConversation}
+      />
     </div>
   );
 };

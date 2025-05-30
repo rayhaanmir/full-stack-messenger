@@ -1,0 +1,68 @@
+.form-wrapper {
+  pointer-events: none;
+  position: fixed;
+  top: -20rem;
+  right: calc(50% - 15rem);
+  height: 20rem;
+  width: 30rem;
+  border-width: 0.5rem;
+  background-color: #bbbbbb;
+  color: black;
+  border-radius: 1rem;
+  z-index: 100;
+  transition: top ease 0.5s;
+}
+
+.form-wrapper.active {
+  pointer-events: auto;
+  top: calc(50% - 10rem)
+}
+
+.create-conversation-form {
+  display: flex;
+  flex-direction: column;
+  max-width: 80%;
+  margin: 3rem auto;
+  gap: 1rem;
+}
+
+.member-list {
+  outline: none;
+  font-size: 0.9rem;
+  font-family: monospace;
+}
+
+.chat-name {
+  outline: none;
+  font-size: 0.9rem;
+  font-family: monospace;
+}
+
+.submit-form {
+  transition: background-color ease 0.1s;
+  width: 10rem;
+  margin: auto;
+}
+
+.submit-form:active {
+  background-color: #505050;
+}
+
+.icon-close-wrapper {
+  display: flex;
+  position: absolute;
+  max-width: fit-content;
+  max-height: fit-content;
+  color: black;
+  top: 1rem;
+  right: 1rem;
+  outline: none;
+}
+
+.icon-close-wrapper:hover {
+  color: #ff4b4b;
+}
+
+.icon-close-wrapper:focus {
+  color: #ff4b4b;
+}
