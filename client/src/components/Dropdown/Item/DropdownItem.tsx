@@ -1,4 +1,3 @@
-import { useState } from "react";
 import "./DropdownItem.css";
 import type { IconType } from "react-icons";
 

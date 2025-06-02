@@ -20,15 +20,14 @@ try {
 }
 
 const io = new Server(server, {
-  cors: { origin: "http://192.168.1.30:5173", methods: ["GET", "POST"] },
+  cors: {
+    origin: ["http://localhost:5173", "http://192.168.1.30:5173"],
+    methods: ["GET", "POST"],
+  },
 });
 
 app.use(cors());
 app.use(express.json());
-
-app.get("/", (res) => {
-  res.status(403).send("GET requests to / are not allowed\n");
-});
 
 // app.post("/api/create-user", async (req, res) => {
 //   const { userId } = req.body;
@@ -46,6 +45,46 @@ app.get("/", (res) => {
 //   return res.status(201).json({ message: "User created" });
 // });
 
+app.get("/api/conversations/:userId", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const conversations = await Conversation.find({
+      members: userId,
+    }).sort({ lastUpdated: -1 });
+    res.json(conversations);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+app.get("/api/messages", async (req, res) => {
+  const conversationId = req.query.conversationId;
+  const limit = parseInt(req.query.limit);
+  const before = req.query.before;
+  try {
+    let messages;
+    if (before) {
+      messages = await Message.find({
+        conversationId: conversationId,
+        timestamp: { $lt: before },
+      })
+        .sort({ timestamp: -1 })
+        .limit(limit);
+    } else {
+      messages = await Message.find({
+        conversationId: conversationId,
+      })
+        .sort({ timestamp: -1 })
+        .limit(limit);
+    }
+    res.json(messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 io.on("connection", async (socket) => {
   console.log(`a user has connected from the socket "${socket.id}"`);
 
@@ -59,17 +98,23 @@ io.on("connection", async (socket) => {
     callback(!!userExists);
   });
 
+  socket.on("join-conversation", (conversationId) =>
+    socket.join(conversationId)
+  );
+
   socket.on(
     "send-message",
-    async (sender, receivers, text, chatId, messageSent) => {
+    async (sender, mentions, text, conversationId, messageSent) => {
       try {
         const msg = await Message.create({
           sender,
-          receivers,
+          mentions,
           text,
-          chatId,
+          conversationId,
         });
         console.log(`Saved message "${msg.id}"`);
+        io.to(conversationId).emit("receive-message", msg);
+        console.log(`Sent message "${msg.id}"`);
         messageSent(true);
       } catch (e) {
         console.error(e);

@@ -1,0 +1,59 @@
+.sidebar-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 16rem;
+  position: absolute;
+  height: 100vh;
+  left: 0;
+  transition: filter ease 0.5s;
+}
+
+.button-row {
+  display: flex;
+  flex-direction: row;
+  background-color: #464646;
+}
+
+.create-button {
+  display: flex;
+  align-items: center;
+  max-width: fit-content;
+  gap: 0.6rem;
+  padding: 0.4rem;
+  max-height: 3rem;
+  margin: 0.5rem auto;
+}
+
+.close-button {
+  display: flex;
+  margin: 0.5rem auto;
+  padding: 0.4rem;
+  align-items: center;
+  max-height: fit-content;
+}
+
+.create-button:active {
+  background-color: #505050;
+}
+
+.entry {
+  border: #929292 solid 0.25rem;
+  border-bottom: 0;
+  border-right: 0;
+  border-left: 0;
+  padding-left: 0.5rem;
+}
+
+.entries-wrapper {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  background-color: #b8b8b8;
+  overflow-x: scroll;
+}
+
+.empty-space {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}

@@ -1,7 +1,6 @@
 .form-wrapper {
-  pointer-events: none;
   position: fixed;
-  top: -20rem;
+  top: -22rem;
   right: calc(50% - 15rem);
   height: 20rem;
   width: 30rem;
@@ -9,12 +8,11 @@
   background-color: #bbbbbb;
   color: black;
   border-radius: 1rem;
-  z-index: 100;
   transition: top ease 0.5s;
+  box-shadow: 1rem 1rem 2rem black;
 }
 
 .form-wrapper.active {
-  pointer-events: auto;
   top: calc(50% - 10rem)
 }
 
@@ -56,6 +54,7 @@
   color: black;
   top: 1rem;
   right: 1rem;
+  font-size: 1.5rem;
   outline: none;
 }
 

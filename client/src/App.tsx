@@ -7,6 +7,7 @@ import Home from "./pages/Home/Home.tsx";
 
 const App = () => {
   const [userId, setUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -14,6 +15,7 @@ const App = () => {
     if (stored) {
       setUserId(stored);
     }
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -50,7 +52,7 @@ const App = () => {
         <Route
           path="/home"
           element={
-            userId ? (
+            loading ? null : userId ? (
               <Home userId={userId} socket={socketRef.current} />
             ) : (
               <Navigate to="/login" replace />

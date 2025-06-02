@@ -5,7 +5,7 @@ const messageSchema = new mongoose.Schema({
   isDM: { type: Boolean, required: true },
   members: [{ type: String, required: true }],
   lastMessage: { type: String, default: "Start the conversation!" },
-  lastUpdated: { type: Date, default: Date.now },
+  lastUpdated: { type: Number, default: Date.now },
 });
 
 export default mongoose.model("Conversation", messageSchema);

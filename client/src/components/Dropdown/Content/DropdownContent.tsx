@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import DropdownItem from "../Item/DropdownItem.tsx";
 import type { DropdownItemProps } from "../Item/DropdownItem.tsx";
-import { FaPlus } from "react-icons/fa";
 import "./DropdownContent.css";
 
 export interface DropdownContentProps {
@@ -34,16 +33,13 @@ const DropdownContent = ({
       tabIndex={-1}
     >
       {items.map((item, index) => {
-        const isFirst = index === 0;
         const isLast = index === items.length - 1;
-        const isOnly = items.length === 1;
         return (
           <DropdownItem
             key={index}
             label={item.label}
             action={item.action}
-            icon={isOnly || isFirst ? FaPlus : undefined}
-            removeBottom={isOnly || isLast}
+            removeBottom={isLast}
             open={open}
             showCreateConversation={showCreateConversation}
           />
