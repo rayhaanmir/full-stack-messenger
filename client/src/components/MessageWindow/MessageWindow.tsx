@@ -12,7 +12,7 @@ const MessageWindow = ({ messageArray }: MessageWindowProps) => {
       {messageArray
         .slice()
         .reverse()
-        .map((msg, index) => (
+        .map((msg) => (
           <Message key={msg._id} {...msg} />
         ))}
     </div>

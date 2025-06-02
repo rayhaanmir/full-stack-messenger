@@ -19,7 +19,8 @@ const Message = ({
 }: MessageProps) => {
   return (
     <div className="text-wrapper">
-      {sender}: {text}
+      <strong>{sender}:</strong>
+      {text}
     </div>
   );
 };

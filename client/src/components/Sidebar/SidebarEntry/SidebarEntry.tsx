@@ -1,4 +1,3 @@
-import type { Socket } from "socket.io-client";
 import "./SidebarEntry.css";
 
 export interface SidebarEntryProps {
@@ -9,6 +8,7 @@ export interface SidebarEntryProps {
   lastMessage: string;
   lastUpdated: number;
   showCreateConversation?: boolean;
+  idLoaded: string | undefined;
   onClickConversation?: (entry: SidebarEntryProps) => void;
 }
 
@@ -21,12 +21,16 @@ const SidebarEntry = (props: SidebarEntryProps) => {
     lastMessage,
     lastUpdated,
     showCreateConversation,
+    idLoaded,
     onClickConversation,
   } = props;
   return (
     <div
       className="entry"
-      style={isDM ? {} : { fontStyle: "italic" }}
+      style={{
+        fontStyle: isDM ? "auto" : "italic",
+        backgroundColor: idLoaded === _id ? "#757575" : "transparent",
+      }}
       onClick={() => onClickConversation?.(props)}
       tabIndex={showCreateConversation ? -1 : 0}
       onKeyDown={(e) => e.key === "Enter" && onClickConversation?.(props)}

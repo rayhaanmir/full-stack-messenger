@@ -190,6 +190,7 @@ const Home = ({ userId, socket }: HomeProps) => {
           setShowCreateConversation={setShowCreateConversation}
           setRenderCreate={setRenderCreate}
           showCreateConversation={showCreateConversation}
+          idLoaded={conversationLoaded?._id}
           setConversationLoaded={setConversationLoaded}
           onClickConversation={handleClickConversation}
         />
@@ -257,6 +258,21 @@ const Home = ({ userId, socket }: HomeProps) => {
             <p>Select a conversation and get to chatting!</p>
           </div>
         )}
+        <div className="bottom-wrapper">
+          {"Not you? "}
+          <span
+            onClick={navigateLogin}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                navigateLogin();
+              }
+            }}
+            style={{ color: "#ADC2FC", cursor: "pointer", display: "inline" }}
+            tabIndex={0}
+          >
+            Log in here.
+          </span>
+        </div>
       </div>
       {renderCreate && (
         <CreateConversationForm
@@ -270,21 +286,6 @@ const Home = ({ userId, socket }: HomeProps) => {
           showCreateConversation={showCreateConversation}
         />
       )}
-      <div className="bottom-wrapper">
-        {"Not you? "}
-        <span
-          onClick={navigateLogin}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              navigateLogin();
-            }
-          }}
-          style={{ color: "#ADC2FC", cursor: "pointer", display: "inline" }}
-          tabIndex={0}
-        >
-          Log in here.
-        </span>
-      </div>
     </>
   );
 };

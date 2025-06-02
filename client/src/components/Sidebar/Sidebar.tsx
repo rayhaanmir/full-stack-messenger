@@ -12,6 +12,7 @@ interface SidebarProps {
   setShowCreateConversation: React.Dispatch<React.SetStateAction<boolean>>;
   setRenderCreate: React.Dispatch<React.SetStateAction<boolean>>;
   showCreateConversation: boolean;
+  idLoaded: string | undefined;
   setConversationLoaded: React.Dispatch<
     React.SetStateAction<SidebarEntryProps | null>
   >;
@@ -25,6 +26,7 @@ const Sidebar = ({
   setShowCreateConversation,
   setRenderCreate,
   showCreateConversation,
+  idLoaded,
   setConversationLoaded,
   onClickConversation,
 }: SidebarProps) => {
@@ -69,6 +71,7 @@ const Sidebar = ({
                 key={index}
                 {...item}
                 showCreateConversation={showCreateConversation}
+                idLoaded={idLoaded}
                 onClickConversation={onClickConversation}
               />
             );
