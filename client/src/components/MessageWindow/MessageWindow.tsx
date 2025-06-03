@@ -13,19 +13,19 @@ const MessageWindow = ({
   idLoaded,
   startMessageAnimation,
 }: MessageWindowProps) => {
+  const conversationMessages: MessageProps[] | undefined =
+    allMessages.get(idLoaded);
   return (
-    allMessages.get(idLoaded) && (
-      <div className="main-wrapper">
-        <div className="empty-space" />
-        {allMessages.get(idLoaded)?.map((msg) => (
-          <Message
-            key={msg._id}
-            {...msg}
-            startMessageAnimation={startMessageAnimation}
-          />
-        ))}
-      </div>
-    )
+    <div className="main-wrapper">
+      <div className="empty-space" />
+      {conversationMessages?.map((msg) => (
+        <Message
+          key={msg._id}
+          {...msg}
+          startMessageAnimation={startMessageAnimation}
+        />
+      ))}
+    </div>
   );
 };
 

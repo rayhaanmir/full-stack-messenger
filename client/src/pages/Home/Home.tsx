@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Socket } from "socket.io-client";
 import type { SidebarEntryProps } from "../..//components/Sidebar/SidebarEntry/SidebarEntry.tsx";
 import type { MessageProps } from "../../components/MessageWindow/Message/Message.tsx";
@@ -16,7 +16,9 @@ interface HomeProps {
 }
 
 const Home = ({ userId, socket }: HomeProps) => {
-  const [text, setText] = useState<string>("");
+  const [allMessageBodies, setAllMessageBodies] = useState<
+    Map<string | undefined, string>
+  >(new Map<string | undefined, string>());
   const [showCreateConversation, setShowCreateConversation] =
     useState<boolean>(false);
   const [members, setMembers] = useState<string>("");
@@ -37,23 +39,31 @@ const Home = ({ userId, socket }: HomeProps) => {
     [boolean, string]
   >([false, ""]);
 
+  const allMessagesRef =
+    useRef<Map<string, MessageProps[] | undefined>>(allMessages);
+
+  useEffect(() => {
+    allMessagesRef.current = allMessages; // Allow use effect to use up-to-date array
+  }, [allMessages]);
+
   useEffect(() => {
     if (userId) {
       fetchConversations();
     }
-  }, [userId, items]);
+  }, [userId]);
 
   useEffect(() => {
     const handleMessage = (msg: MessageProps) => {
       const newConversationMessages: MessageProps[] | undefined =
-        allMessages.get(msg.conversationId);
+        allMessagesRef.current.get(msg.conversationId);
       if (newConversationMessages) {
-        console.log("two");
         setStartMessageAnimation([true, msg._id]);
         newConversationMessages?.unshift(msg);
-        setAllMessages((old) =>
-          old.set(msg.conversationId, newConversationMessages)
-        );
+        setAllMessages((old) => {
+          const newMap: Map<string, MessageProps[] | undefined> = new Map(old);
+          newMap.set(msg.conversationId, newConversationMessages);
+          return newMap;
+        });
         setTimeout(() => setStartMessageAnimation([false, msg._id]), 50);
       }
     };
@@ -69,6 +79,13 @@ const Home = ({ userId, socket }: HomeProps) => {
       `http://192.168.1.30:3000/api/conversations/${userId}`
     );
     const data: SidebarEntryProps[] = await res.json();
+    setAllMessageBodies((old) => {
+      const updated = new Map(old);
+      for (const conversation of data) {
+        updated.set(conversation._id, "");
+      }
+      return updated;
+    });
     setItems(data);
   };
 
@@ -82,15 +99,22 @@ const Home = ({ userId, socket }: HomeProps) => {
       // TODO Limit loaded messages and implement dynamically loading older messages
       socket?.emit("join-conversation", entry._id);
       const currentMessages = await fetchMessages(entry._id);
-      setAllMessages((old) => old.set(entry._id, currentMessages));
+      setAllMessages((old) => {
+        const updated: Map<string, MessageProps[] | undefined> = new Map(old);
+        updated.set(entry._id, currentMessages);
+        return updated;
+      });
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setText(e.target.value);
-    const textarea = e.target;
-    textarea.style.height = "auto";
-    textarea.style.height = textarea.scrollHeight + "px";
+    setAllMessageBodies((old) => {
+      const updated: Map<string | undefined, string> = new Map(old);
+      updated.set(conversationLoaded?._id, e.target.value);
+      return updated;
+    });
+    e.target.style.height = "inherit";
+    e.target.style.height = e.target.scrollHeight + "px";
   };
 
   const handleSubmitMessage = (e: React.FormEvent<HTMLFormElement>) => {
@@ -99,13 +123,17 @@ const Home = ({ userId, socket }: HomeProps) => {
       "send-message",
       userId,
       [], // TODO Implement mentioning specific users
-      text,
+      allMessageBodies.get(conversationLoaded?._id),
       conversationLoaded?._id,
       (successful: boolean) => {
         if (!successful) {
           alert("Message failed to send");
         }
-        setText("");
+        setAllMessageBodies((old) => {
+          const newMap: Map<string | undefined, string> = new Map(old);
+          newMap.set(conversationLoaded?._id, "");
+          return newMap;
+        });
       }
     );
   };
@@ -258,7 +286,7 @@ const Home = ({ userId, socket }: HomeProps) => {
             <form className="message-form" onSubmit={handleSubmitMessage}>
               <textarea
                 className="message-body"
-                value={text}
+                value={allMessageBodies.get(conversationLoaded?._id)}
                 onChange={handleChange}
                 placeholder="Type message here"
                 tabIndex={showCreateConversation ? -1 : 0}
