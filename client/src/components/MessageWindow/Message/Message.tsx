@@ -7,6 +7,7 @@ export interface MessageProps {
   text: string;
   timestamp: number;
   conversationId: string;
+  startMessageAnimation: [boolean, string];
 }
 
 const Message = ({
@@ -16,10 +17,20 @@ const Message = ({
   text,
   timestamp,
   conversationId,
+  startMessageAnimation,
 }: MessageProps) => {
+  const date: Date = new Date(timestamp);
   return (
-    <div className="text-wrapper">
-      <strong>{sender}:</strong>
+    <div
+      className={`text-wrapper${
+        startMessageAnimation[0] && startMessageAnimation[1] === _id
+          ? " start-animation"
+          : ""
+      }`}
+    >
+      <strong className="sender-info" title="Click for message info">
+        {`${sender} ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`}:
+      </strong>
       {text}
     </div>
   );

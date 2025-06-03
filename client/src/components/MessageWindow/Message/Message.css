@@ -1,6 +1,19 @@
 .text-wrapper {
   display: flex;
-  width: 100%;
+  flex-direction: column;
+  width: fit-content;
   height: fit-content;
-  gap: 0.3rem;
+  text-align: left;
+  padding-left: 1.5rem;
+  opacity: 1;
+  transition: padding-left ease 1s, opacity ease 1s;
+}
+
+.text-wrapper.start-animation {
+  padding-left: 10rem;
+  opacity: 0;
+}
+
+.sender-info {
+  cursor: pointer;
 }

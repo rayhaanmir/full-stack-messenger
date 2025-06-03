@@ -65,7 +65,6 @@
   width: calc(100vw - 16rem);
   right: 0;
   transition: filter ease 0.5s;
-  overflow-y: scroll;
 }
 
 .middle-wrapper.animate {

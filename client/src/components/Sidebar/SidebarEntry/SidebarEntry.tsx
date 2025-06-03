@@ -27,11 +27,15 @@ const SidebarEntry = (props: SidebarEntryProps) => {
   return (
     <div
       className="entry"
-      style={{
-        fontStyle: isDM ? "auto" : "italic",
-        backgroundColor: idLoaded === _id ? "#757575" : "transparent",
-      }}
-      onClick={() => onClickConversation?.(props)}
+      style={
+        idLoaded === _id
+          ? {
+              fontStyle: isDM ? "auto" : "italic",
+              backgroundColor: "#757575",
+            }
+          : { fontStyle: isDM ? "auto" : "italic" }
+      }
+      onClick={() => idLoaded !== _id && onClickConversation?.(props)}
       tabIndex={showCreateConversation ? -1 : 0}
       onKeyDown={(e) => e.key === "Enter" && onClickConversation?.(props)}
     >

@@ -30,7 +30,12 @@ const Home = ({ userId, socket }: HomeProps) => {
   const [renderCreate, setRenderCreate] = useState<boolean>(false);
   const [conversationLoaded, setConversationLoaded] =
     useState<SidebarEntryProps | null>(null);
-  const [messages, setMessages] = useState<MessageProps[]>([]);
+  const [allMessages, setAllMessages] = useState<
+    Map<string, MessageProps[] | undefined>
+  >(new Map<string, MessageProps[]>());
+  const [startMessageAnimation, setStartMessageAnimation] = useState<
+    [boolean, string]
+  >([false, ""]);
 
   useEffect(() => {
     if (userId) {
@@ -39,8 +44,17 @@ const Home = ({ userId, socket }: HomeProps) => {
   }, [userId, items]);
 
   useEffect(() => {
-    const handleMessage = (msg: MessageProps) =>
-      setMessages((oldMessages) => [msg, ...oldMessages]);
+    const handleMessage = (msg: MessageProps) => {
+      setStartMessageAnimation([true, msg._id]);
+      const newConversationMessages: MessageProps[] | undefined =
+        allMessages.get(msg._id);
+      if (newConversationMessages) {
+        newConversationMessages?.unshift(msg);
+        setAllMessages((old) => old.set(msg._id, newConversationMessages));
+      }
+      setTimeout(() => setStartMessageAnimation([false, msg._id]), 50);
+    };
+
     socket?.on("receive-message", handleMessage);
     return () => {
       socket?.off("receive-message", handleMessage);
@@ -61,10 +75,12 @@ const Home = ({ userId, socket }: HomeProps) => {
 
   const handleClickConversation = async (entry: SidebarEntryProps) => {
     setConversationLoaded?.(entry);
-    setMessages([]);
-    socket?.emit("join-conversation", entry._id);
-    const currentMessages = await fetchMessages(entry._id);
-    setMessages(currentMessages);
+    if (!allMessages.has(entry._id)) {
+      socket?.emit("join-conversation", entry._id);
+      // TODO Limit loaded messages and implement dynamically loading older messages
+      const currentMessages = await fetchMessages(entry._id);
+      setAllMessages((old) => old.set(entry._id, currentMessages));
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -114,7 +130,7 @@ const Home = ({ userId, socket }: HomeProps) => {
   const fetchMessages = async (
     conversationId: string,
     before: number = 0,
-    limit: number = 100
+    limit: number = 0
   ): Promise<MessageProps[]> => {
     const params = new URLSearchParams({
       conversationId,
@@ -168,9 +184,7 @@ const Home = ({ userId, socket }: HomeProps) => {
       isDM,
       memberArray,
       (successful: boolean) => {
-        if (successful) {
-          console.log(`Conversation created`);
-        } else {
+        if (!successful) {
           alert("Failed to create conversation");
         }
         setMembers("");
@@ -233,7 +247,11 @@ const Home = ({ userId, socket }: HomeProps) => {
         )}
         {conversationLoaded ? (
           <>
-            <MessageWindow messageArray={messages} />
+            <MessageWindow
+              allMessages={allMessages}
+              idLoaded={conversationLoaded?._id}
+              startMessageAnimation={startMessageAnimation}
+            />
             <form className="message-form" onSubmit={handleSubmitMessage}>
               <textarea
                 className="message-body"
