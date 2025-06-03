@@ -77,10 +77,10 @@ const Home = ({ userId, socket }: HomeProps) => {
   };
 
   const handleClickConversation = async (entry: SidebarEntryProps) => {
-    socket?.emit("join-conversation", entry._id);
     setConversationLoaded?.(entry);
     if (!allMessages.has(entry._id)) {
       // TODO Limit loaded messages and implement dynamically loading older messages
+      socket?.emit("join-conversation", entry._id);
       const currentMessages = await fetchMessages(entry._id);
       setAllMessages((old) => old.set(entry._id, currentMessages));
     }
