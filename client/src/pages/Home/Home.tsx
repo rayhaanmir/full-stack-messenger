@@ -45,14 +45,17 @@ const Home = ({ userId, socket }: HomeProps) => {
 
   useEffect(() => {
     const handleMessage = (msg: MessageProps) => {
-      setStartMessageAnimation([true, msg._id]);
       const newConversationMessages: MessageProps[] | undefined =
-        allMessages.get(msg._id);
+        allMessages.get(msg.conversationId);
       if (newConversationMessages) {
+        console.log("two");
+        setStartMessageAnimation([true, msg._id]);
         newConversationMessages?.unshift(msg);
-        setAllMessages((old) => old.set(msg._id, newConversationMessages));
+        setAllMessages((old) =>
+          old.set(msg.conversationId, newConversationMessages)
+        );
+        setTimeout(() => setStartMessageAnimation([false, msg._id]), 50);
       }
-      setTimeout(() => setStartMessageAnimation([false, msg._id]), 50);
     };
 
     socket?.on("receive-message", handleMessage);
@@ -74,9 +77,9 @@ const Home = ({ userId, socket }: HomeProps) => {
   };
 
   const handleClickConversation = async (entry: SidebarEntryProps) => {
+    socket?.emit("join-conversation", entry._id);
     setConversationLoaded?.(entry);
     if (!allMessages.has(entry._id)) {
-      socket?.emit("join-conversation", entry._id);
       // TODO Limit loaded messages and implement dynamically loading older messages
       const currentMessages = await fetchMessages(entry._id);
       setAllMessages((old) => old.set(entry._id, currentMessages));
