@@ -3,26 +3,27 @@ import Message from "./Message/Message";
 import "./MessageWindow.css";
 
 interface MessageWindowProps {
-  allMessages: Map<string, MessageProps[] | undefined>;
+  allMessages: Map<
+    string,
+    { messages: MessageProps[]; animationState: boolean } | undefined
+  >;
   idLoaded: string;
-  startMessageAnimation: [boolean, string];
 }
 
-const MessageWindow = ({
-  allMessages,
-  idLoaded,
-  startMessageAnimation,
-}: MessageWindowProps) => {
-  const conversationMessages: MessageProps[] | undefined =
-    allMessages.get(idLoaded);
+const MessageWindow = ({ allMessages, idLoaded }: MessageWindowProps) => {
+  const conversationMessages:
+    | { messages: MessageProps[]; animationState: boolean }
+    | undefined = allMessages.get(idLoaded);
   return (
     <div className="main-wrapper">
       <div className="empty-space" />
-      {conversationMessages?.map((msg) => (
+      {conversationMessages?.["messages"].map((msg, index: number) => (
         <Message
           key={msg._id}
           {...msg}
-          startMessageAnimation={startMessageAnimation}
+          startMessageAnimation={
+            conversationMessages["animationState"] && index == 0
+          }
         />
       ))}
     </div>

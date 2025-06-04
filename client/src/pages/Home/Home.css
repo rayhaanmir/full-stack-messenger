@@ -71,21 +71,21 @@
   transition: width ease 0.5s;
 }
 
-.open-button-wrapper {
+.top-bar {
   display: flex;
   position: absolute;
-  left: 0;
   top: 0;
+  width: 100%;
+  height: 3rem;
+  flex-shrink: 0;
+  background-color: #464646;
 }
 
 .open-button {
   display: flex;
-  margin: 0.5rem auto;
-  margin-left: 0.5rem;
+  margin: 0.5rem;
   padding: 0.4rem;
-  align-items: center;
-  align-items: center;
-  font-size: 1.5rem;
+  max-height: fit-content;
 }
 
 .open-button:active {

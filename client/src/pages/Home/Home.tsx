@@ -33,18 +33,19 @@ const Home = ({ userId, socket }: HomeProps) => {
   const [conversationLoaded, setConversationLoaded] =
     useState<SidebarEntryProps | null>(null);
   const [allMessages, setAllMessages] = useState<
-    Map<string, MessageProps[] | undefined>
-  >(new Map<string, MessageProps[]>());
-  const [startMessageAnimation, setStartMessageAnimation] = useState<
-    [boolean, string]
-  >([false, ""]);
+    Map<
+      string,
+      { messages: MessageProps[]; animationState: boolean } | undefined
+    >
+  >(new Map<string, { messages: MessageProps[]; animationState: boolean }>());
 
   const allMessagesRef =
-    useRef<Map<string, MessageProps[] | undefined>>(allMessages);
-
-  useEffect(() => {
-    allMessagesRef.current = allMessages; // Allow use effect to use up-to-date array
-  }, [allMessages]);
+    useRef<
+      Map<
+        string,
+        { messages: MessageProps[]; animationState: boolean } | undefined
+      >
+    >(allMessages);
 
   useEffect(() => {
     if (userId) {
@@ -53,18 +54,39 @@ const Home = ({ userId, socket }: HomeProps) => {
   }, [userId]);
 
   useEffect(() => {
+    allMessagesRef.current = allMessages; // Allow useEffect below to use up-to-date array
+  }, [allMessages]);
+
+  useEffect(() => {
     const handleMessage = (msg: MessageProps) => {
-      const newConversationMessages: MessageProps[] | undefined =
-        allMessagesRef.current.get(msg.conversationId);
+      const newConversationMessages:
+        | { messages: MessageProps[]; animationState: boolean }
+        | undefined = allMessagesRef.current.get(msg.conversationId);
       if (newConversationMessages) {
-        setStartMessageAnimation([true, msg._id]);
-        newConversationMessages?.unshift(msg);
+        newConversationMessages["messages"]?.unshift(msg);
+        newConversationMessages["animationState"] = true;
         setAllMessages((old) => {
-          const newMap: Map<string, MessageProps[] | undefined> = new Map(old);
+          const newMap: Map<
+            string,
+            { messages: MessageProps[]; animationState: boolean } | undefined
+          > = new Map(old);
           newMap.set(msg.conversationId, newConversationMessages);
           return newMap;
         });
-        setTimeout(() => setStartMessageAnimation([false, msg._id]), 50);
+        setTimeout(
+          () =>
+            setAllMessages((old) => {
+              const newMap: Map<
+                string,
+                | { messages: MessageProps[]; animationState: boolean }
+                | undefined
+              > = new Map(old);
+              newConversationMessages["animationState"] = false;
+              newMap.set(msg.conversationId, newConversationMessages);
+              return newMap;
+            }),
+          10
+        );
       }
     };
 
@@ -98,10 +120,16 @@ const Home = ({ userId, socket }: HomeProps) => {
     if (!allMessages.has(entry._id)) {
       // TODO Limit loaded messages and implement dynamically loading older messages
       socket?.emit("join-conversation", entry._id);
-      const currentMessages = await fetchMessages(entry._id);
+      const currentMessages: MessageProps[] = await fetchMessages(entry._id);
       setAllMessages((old) => {
-        const updated: Map<string, MessageProps[] | undefined> = new Map(old);
-        updated.set(entry._id, currentMessages);
+        const updated: Map<
+          string,
+          { messages: MessageProps[]; animationState: boolean } | undefined
+        > = new Map(old);
+        updated.set(entry._id, {
+          messages: currentMessages,
+          animationState: false,
+        });
         return updated;
       });
     }
@@ -184,6 +212,13 @@ const Home = ({ userId, socket }: HomeProps) => {
     return messages;
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault(); // Prevents newline
+      (e.target as HTMLTextAreaElement).form?.requestSubmit(); // Submit the form
+    }
+  };
+
   const handleSubmitConversation = async (
     e: React.FormEvent<HTMLFormElement>
   ) => {
@@ -258,13 +293,11 @@ const Home = ({ userId, socket }: HomeProps) => {
           }
         }}
       >
-        {fullWidth && (
-          <div
-            className="open-button-wrapper"
-            tabIndex={showCreateConversation ? -1 : 0}
-          >
+        <div className="top-bar">
+          {fullWidth && (
             <button
               className="open-button"
+              tabIndex={showCreateConversation ? -1 : 0}
               onClick={() => {
                 setRenderSidebar(true);
                 setAnimateSidebarWidth(true);
@@ -274,21 +307,26 @@ const Home = ({ userId, socket }: HomeProps) => {
             >
               <FaArrowRight />
             </button>
-          </div>
-        )}
+          )}
+        </div>
+
         {conversationLoaded ? (
           <>
             <MessageWindow
               allMessages={allMessages}
               idLoaded={conversationLoaded?._id}
-              startMessageAnimation={startMessageAnimation}
             />
             <form className="message-form" onSubmit={handleSubmitMessage}>
               <textarea
                 className="message-body"
                 value={allMessageBodies.get(conversationLoaded?._id)}
                 onChange={handleChange}
-                placeholder="Type message here"
+                onKeyDown={handleKeyDown}
+                placeholder={`Message ${
+                  conversationLoaded?.isDM
+                    ? conversationLoaded?.members[0]
+                    : `"${conversationLoaded?.chatId}"`
+                }`}
                 tabIndex={showCreateConversation ? -1 : 0}
               />
               <button
@@ -311,11 +349,7 @@ const Home = ({ userId, socket }: HomeProps) => {
           {"Not you? "}
           <span
             onClick={navigateLogin}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                navigateLogin();
-              }
-            }}
+            onKeyDown={(e) => e.key === "Enter" && navigateLogin()}
             style={{ color: "#ADC2FC", cursor: "pointer", display: "inline" }}
             tabIndex={0}
           >

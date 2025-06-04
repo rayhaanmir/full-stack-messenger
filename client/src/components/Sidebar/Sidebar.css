@@ -12,6 +12,8 @@
   display: flex;
   flex-direction: row;
   background-color: #464646;
+  height: 3rem;
+  flex-shrink: 0;
 }
 
 .create-button {
@@ -20,7 +22,6 @@
   max-width: fit-content;
   gap: 0.6rem;
   padding: 0.4rem;
-  max-height: 3rem;
   margin: 0.5rem auto;
 }
 
