@@ -2,7 +2,6 @@ import type { SidebarEntryProps } from "./SidebarEntry/SidebarEntry.tsx";
 import { FaPlus, FaArrowLeft } from "react-icons/fa";
 import "./Sidebar.css";
 import SidebarEntry from "./SidebarEntry/SidebarEntry.tsx";
-import type { Socket } from "socket.io-client";
 
 interface SidebarProps {
   SidebarEntries: SidebarEntryProps[];
@@ -11,6 +10,7 @@ interface SidebarProps {
   setFullWidth: React.Dispatch<React.SetStateAction<boolean>>;
   setShowCreateConversation: React.Dispatch<React.SetStateAction<boolean>>;
   setRenderCreate: React.Dispatch<React.SetStateAction<boolean>>;
+  userId: string;
   showCreateConversation: boolean;
   idLoaded: string | undefined;
   setConversationLoaded: React.Dispatch<
@@ -20,6 +20,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({
+  userId,
   SidebarEntries,
   setAnimateSidebarWidth,
   setFullWidth,
@@ -65,11 +66,12 @@ const Sidebar = ({
           </button>
         </div>
         <div className="entries-wrapper">
-          {SidebarEntries.map((item, index) => {
+          {SidebarEntries.map((item) => {
             return (
               <SidebarEntry
-                key={index}
+                key={item._id}
                 {...item}
+                userId={userId}
                 showCreateConversation={showCreateConversation}
                 idLoaded={idLoaded}
                 onClickConversation={onClickConversation}

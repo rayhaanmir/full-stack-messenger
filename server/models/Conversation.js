@@ -4,8 +4,11 @@ const messageSchema = new mongoose.Schema({
   chatId: { type: String, required: true },
   isDM: { type: Boolean, required: true },
   members: [{ type: String, required: true }],
-  lastMessage: { type: String, default: "Start the conversation!" },
+  lastUser: { type: String, default: "" },
+  lastMessage: { type: String, default: "" },
   lastUpdated: { type: Number, default: Date.now },
 });
+
+messageSchema.index({ lastUpdated: -1 });
 
 export default mongoose.model("Conversation", messageSchema);

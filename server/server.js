@@ -16,7 +16,7 @@ try {
   await mongoose.connect(process.env.MONGO_URI);
   console.log("Connected to MongoDB");
 } catch (err) {
-  console.error("MongoDB error:", err);
+  console.error(err);
 }
 
 const io = new Server(server, {
@@ -95,6 +95,9 @@ io.on("connection", async (socket) => {
 
   socket.on("validate-username", async (name, callback) => {
     const userExists = await User.findOne({ userId: name });
+    if (userExists) {
+      socket.join(name);
+    }
     callback(!!userExists);
   });
 
@@ -115,6 +118,20 @@ io.on("connection", async (socket) => {
         console.log(`Saved message "${msg.id}"`);
         io.to(conversationId).emit("receive-message", msg);
         console.log(`Sent message "${msg.id}"`);
+        const conversation = await Conversation.findOneAndUpdate(
+          { _id: conversationId },
+          { lastUpdated: Date.now(), lastUser: sender, lastMessage: text }
+        );
+        for (const user of conversation.members) {
+          console.log(`Updating ${user}'s conversations`);
+          io.to(user).emit(
+            "receive-conversation-update",
+            conversationId,
+            sender,
+            text
+          );
+        }
+        console.log(`Sent conversation update "${conversationId}"`);
         messageSent(true);
       } catch (e) {
         console.error(e);
@@ -133,6 +150,11 @@ io.on("connection", async (socket) => {
           members,
         });
         console.log(`Saved conversation "${conversation.id}"`);
+        for (const user of members) {
+          console.log(`Sending to ${user}...`);
+          io.to(user).emit("receive-conversation", conversation);
+        }
+        console.log(`Sent conversation "${conversation.id}"`);
         conversationCreated(true);
       } catch (e) {
         console.error(e);

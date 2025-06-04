@@ -47,6 +47,8 @@ const Home = ({ userId, socket }: HomeProps) => {
       >
     >(allMessages);
 
+  const itemsRef = useRef<SidebarEntryProps[]>(items);
+
   useEffect(() => {
     if (userId) {
       fetchConversations();
@@ -54,11 +56,16 @@ const Home = ({ userId, socket }: HomeProps) => {
   }, [userId]);
 
   useEffect(() => {
-    allMessagesRef.current = allMessages; // Allow useEffect below to use up-to-date array
+    allMessagesRef.current = allMessages;
   }, [allMessages]);
 
   useEffect(() => {
-    const handleMessage = (msg: MessageProps) => {
+    itemsRef.current = items;
+  }, [items]);
+
+  useEffect(() => {
+    const handleReceiveMessage = (msg: MessageProps) => {
+      console.log("1");
       const newConversationMessages:
         | { messages: MessageProps[]; animationState: boolean }
         | undefined = allMessagesRef.current.get(msg.conversationId);
@@ -90,9 +97,42 @@ const Home = ({ userId, socket }: HomeProps) => {
       }
     };
 
-    socket?.on("receive-message", handleMessage);
+    const handleReceiveConversation = (conversation: SidebarEntryProps) => {
+      console.log("2");
+      const currentItems: SidebarEntryProps[] = itemsRef.current;
+      currentItems.unshift(conversation);
+      setItems(currentItems);
+    };
+
+    const handleReceiveConversationUpdate = (
+      conversationId: string,
+      sender: string,
+      message: string
+    ) => {
+      console.log("3");
+      const currentItems: SidebarEntryProps[] = itemsRef.current;
+      const index = currentItems.findIndex(
+        (conversation) => conversation._id === conversationId
+      );
+      console.log(index);
+      const removed: SidebarEntryProps[] = currentItems.splice(index, 1);
+      removed[0].lastUser = sender;
+      removed[0].lastMessage = message;
+      currentItems.unshift(removed[0]);
+      setItems(currentItems);
+    };
+
+    socket?.on("receive-message", handleReceiveMessage);
+    socket?.on("receive-conversation", handleReceiveConversation);
+    socket?.on("receive-conversation-update", handleReceiveConversationUpdate);
+
     return () => {
-      socket?.off("receive-message", handleMessage);
+      socket?.off("receive-message", handleReceiveMessage);
+      socket?.off("receive-conversation", handleReceiveConversation);
+      socket?.off(
+        "receive-conversation-update",
+        handleReceiveConversationUpdate
+      );
     };
   }, [socket]);
 
@@ -269,6 +309,7 @@ const Home = ({ userId, socket }: HomeProps) => {
           setFullWidth={setFullWidth}
           setShowCreateConversation={setShowCreateConversation}
           setRenderCreate={setRenderCreate}
+          userId={userId}
           showCreateConversation={showCreateConversation}
           idLoaded={conversationLoaded?._id}
           setConversationLoaded={setConversationLoaded}

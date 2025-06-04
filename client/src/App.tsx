@@ -11,16 +11,21 @@ const App = () => {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("userId");
-    if (stored) {
-      setUserId(stored);
-    }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
     if (!socketRef.current) {
       socketRef.current = io("http://192.168.1.30:3000");
+    }
+    const stored = localStorage.getItem("userId");
+    if (stored) {
+      socketRef.current.emit("validate-username", stored, (exists: boolean) => {
+        if (exists) {
+          setUserId(stored);
+        } else {
+          localStorage.removeItem("userId");
+        }
+        setLoading(false);
+      });
+    } else {
+      setLoading(false);
     }
   }, []);
 
@@ -30,7 +35,7 @@ const App = () => {
         <Route
           path="/"
           element={
-            userId ? (
+            loading ? null : userId ? (
               <Navigate to="/home" replace />
             ) : (
               <Navigate to="/login" replace />

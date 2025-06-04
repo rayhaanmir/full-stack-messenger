@@ -5,8 +5,10 @@ export interface SidebarEntryProps {
   chatId: string;
   isDM: boolean;
   members: string[];
+  lastUser: string;
   lastMessage: string;
   lastUpdated: number;
+  userId?: string;
   showCreateConversation?: boolean;
   idLoaded: string | undefined;
   onClickConversation?: (entry: SidebarEntryProps) => void;
@@ -14,10 +16,12 @@ export interface SidebarEntryProps {
 
 const SidebarEntry = (props: SidebarEntryProps) => {
   const {
+    userId,
     _id,
     chatId,
     isDM,
     members,
+    lastUser,
     lastMessage,
     lastUpdated,
     showCreateConversation,
@@ -39,7 +43,7 @@ const SidebarEntry = (props: SidebarEntryProps) => {
       tabIndex={showCreateConversation ? -1 : 0}
       onKeyDown={(e) => e.key === "Enter" && onClickConversation?.(props)}
     >
-      {isDM ? members[0] : chatId}
+      {isDM ? (userId === members[0] ? members[1] : members[0]) : chatId}
     </div>
   );
 };
