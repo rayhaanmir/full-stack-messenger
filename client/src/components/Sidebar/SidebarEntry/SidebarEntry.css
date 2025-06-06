@@ -3,6 +3,13 @@
   border: 0;
   color: black;
   cursor: pointer;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.icon-wrapper {
+  color: #ff0000;
+  font-size: 0.5rem;
 }
 
 .entry:hover {

@@ -7,8 +7,10 @@ import CreateConversationForm from "../../components/CreateConversationForm/Crea
 import Sidebar from "../../components/Sidebar/Sidebar.tsx";
 import { FaArrowRight } from "react-icons/fa";
 import { IoIosSend } from "react-icons/io";
-import "./Home.css";
 import MessageWindow from "../../components/MessageWindow/MessageWindow.tsx";
+import { playSound } from "react-sounds";
+import notifySound from "../../assets/sounds/notification-pluck-off-269290.mp3";
+import "./Home.css";
 
 interface HomeProps {
   userId: string;
@@ -16,38 +18,27 @@ interface HomeProps {
 }
 
 const Home = ({ userId, socket }: HomeProps) => {
-  const [allMessageBodies, setAllMessageBodies] = useState<
-    Map<string | undefined, string>
-  >(new Map<string | undefined, string>());
-  const [showCreateConversation, setShowCreateConversation] =
-    useState<boolean>(false);
-  const [members, setMembers] = useState<string>("");
-  const [groupName, setGroupName] = useState<string>("");
+  const [showCreateConversation, setShowCreateConversation] = useState(false);
+  const [members, setMembers] = useState("");
+  const [groupName, setGroupName] = useState("");
   const navigate = useNavigate();
   const [items, setItems] = useState<SidebarEntryProps[]>([]);
-  const [fullWidth, setFullWidth] = useState<boolean>(true);
-  const [animateSidebarWidth, setAnimateSidebarWidth] =
-    useState<boolean>(false);
-  const [renderSidebar, setRenderSidebar] = useState<boolean>(false);
-  const [renderCreate, setRenderCreate] = useState<boolean>(false);
+  const [fullWidth, setFullWidth] = useState(true);
+  const [animateSidebarWidth, setAnimateSidebarWidth] = useState(false);
+  const [renderSidebar, setRenderSidebar] = useState(false);
+  const [renderCreate, setRenderCreate] = useState(false);
   const [conversationLoaded, setConversationLoaded] =
     useState<SidebarEntryProps | null>(null);
-  const [allMessages, setAllMessages] = useState<
-    Map<
-      string,
-      { messages: MessageProps[]; animationState: boolean } | undefined
-    >
-  >(new Map<string, { messages: MessageProps[]; animationState: boolean }>());
+  const [allMessages, setAllMessages] = useState(
+    new Map<string, { messages: MessageProps[]; animationState: boolean }>()
+  );
+  const [allMessageBodies, setAllMessageBodies] = useState(
+    new Map<string | undefined, string>()
+  );
 
-  const allMessagesRef =
-    useRef<
-      Map<
-        string,
-        { messages: MessageProps[]; animationState: boolean } | undefined
-      >
-    >(allMessages);
-
-  const itemsRef = useRef<SidebarEntryProps[]>(items);
+  const allMessagesRef = useRef(allMessages);
+  const itemsRef = useRef(items);
+  const conversationLoadedRef = useRef(conversationLoaded);
 
   useEffect(() => {
     if (userId) {
@@ -64,32 +55,37 @@ const Home = ({ userId, socket }: HomeProps) => {
   }, [items]);
 
   useEffect(() => {
+    conversationLoadedRef.current = conversationLoaded;
+  }, [conversationLoaded]);
+
+  useEffect(() => {
+    socket?.emit("join-user-room", userId);
     const handleReceiveMessage = (msg: MessageProps) => {
-      console.log("1");
-      const newConversationMessages:
-        | { messages: MessageProps[]; animationState: boolean }
-        | undefined = allMessagesRef.current.get(msg.conversationId);
+      const newConversationMessages = allMessagesRef.current.get(
+        msg.conversationId
+      );
       if (newConversationMessages) {
-        newConversationMessages["messages"]?.unshift(msg);
-        newConversationMessages["animationState"] = true;
+        const newMessages = [msg, ...newConversationMessages.messages];
+        const updatedEntry = {
+          messages: newMessages,
+          animationState: true,
+        };
         setAllMessages((old) => {
-          const newMap: Map<
-            string,
-            { messages: MessageProps[]; animationState: boolean } | undefined
-          > = new Map(old);
-          newMap.set(msg.conversationId, newConversationMessages);
+          const newMap = new Map(old);
+          newMap.set(msg.conversationId, updatedEntry);
           return newMap;
         });
         setTimeout(
           () =>
             setAllMessages((old) => {
-              const newMap: Map<
-                string,
-                | { messages: MessageProps[]; animationState: boolean }
-                | undefined
-              > = new Map(old);
-              newConversationMessages["animationState"] = false;
-              newMap.set(msg.conversationId, newConversationMessages);
+              const newMap = new Map(old);
+              const existing = newMap.get(msg.conversationId);
+              if (existing) {
+                newMap.set(msg.conversationId, {
+                  ...existing,
+                  animationState: false,
+                });
+              }
               return newMap;
             }),
           10
@@ -98,10 +94,7 @@ const Home = ({ userId, socket }: HomeProps) => {
     };
 
     const handleReceiveConversation = (conversation: SidebarEntryProps) => {
-      console.log("2");
-      const currentItems: SidebarEntryProps[] = itemsRef.current;
-      currentItems.unshift(conversation);
-      setItems(currentItems);
+      setItems((old) => [conversation, ...old]);
     };
 
     const handleReceiveConversationUpdate = (
@@ -109,17 +102,23 @@ const Home = ({ userId, socket }: HomeProps) => {
       sender: string,
       message: string
     ) => {
-      console.log("3");
-      const currentItems: SidebarEntryProps[] = itemsRef.current;
-      const index = currentItems.findIndex(
-        (conversation) => conversation._id === conversationId
-      );
-      console.log(index);
-      const removed: SidebarEntryProps[] = currentItems.splice(index, 1);
-      removed[0].lastUser = sender;
-      removed[0].lastMessage = message;
-      currentItems.unshift(removed[0]);
-      setItems(currentItems);
+      setItems((prev) => {
+        const updated = [...prev];
+        const index = updated.findIndex(
+          (conversation) => conversation._id === conversationId
+        );
+        if (index !== -1) {
+          const [removed] = updated.splice(index, 1);
+          removed.lastUser = sender;
+          removed.lastMessage = message;
+          if (conversationId !== conversationLoadedRef.current?._id) {
+            removed.updateAlert = true;
+            playSound(notifySound);
+          }
+          updated.unshift(removed);
+        }
+        return updated;
+      });
     };
 
     socket?.on("receive-message", handleReceiveMessage);
@@ -152,32 +151,38 @@ const Home = ({ userId, socket }: HomeProps) => {
   };
 
   const navigateLogin = () => {
+    socket?.emit("leave-user-room", userId);
     navigate("/login");
   };
 
   const handleClickConversation = async (entry: SidebarEntryProps) => {
-    setConversationLoaded?.(entry);
-    if (!allMessages.has(entry._id)) {
-      // TODO Limit loaded messages and implement dynamically loading older messages
-      socket?.emit("join-conversation", entry._id);
-      const currentMessages: MessageProps[] = await fetchMessages(entry._id);
-      setAllMessages((old) => {
-        const updated: Map<
-          string,
-          { messages: MessageProps[]; animationState: boolean } | undefined
-        > = new Map(old);
-        updated.set(entry._id, {
-          messages: currentMessages,
-          animationState: false,
+    if (entry._id !== conversationLoaded?._id) {
+      setConversationLoaded?.(entry);
+      const currentItems = items;
+      const index = currentItems.findIndex(
+        (conversation) => conversation._id === entry._id
+      );
+      currentItems[index].updateAlert = false;
+      setItems(currentItems);
+      if (!allMessages.has(entry._id)) {
+        // TODO Limit loaded messages and implement dynamically loading older messages
+        socket?.emit("join-conversation", entry._id);
+        const currentMessages: MessageProps[] = await fetchMessages(entry._id);
+        setAllMessages((old) => {
+          const updated = new Map(old);
+          updated.set(entry._id, {
+            messages: currentMessages,
+            animationState: false,
+          });
+          return updated;
         });
-        return updated;
-      });
+      }
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setAllMessageBodies((old) => {
-      const updated: Map<string | undefined, string> = new Map(old);
+      const updated = new Map(old);
       updated.set(conversationLoaded?._id, e.target.value);
       return updated;
     });
@@ -198,7 +203,7 @@ const Home = ({ userId, socket }: HomeProps) => {
           alert("Message failed to send");
         }
         setAllMessageBodies((old) => {
-          const newMap: Map<string | undefined, string> = new Map(old);
+          const newMap = new Map(old);
           newMap.set(conversationLoaded?._id, "");
           return newMap;
         });
@@ -263,10 +268,10 @@ const Home = ({ userId, socket }: HomeProps) => {
     e: React.FormEvent<HTMLFormElement>
   ) => {
     e.preventDefault();
-    const memberArray: string[] = members.split(",");
+    const memberArray = members.split(",");
     memberArray.push(userId);
-    let isDM: boolean = false;
-    let modifiedGroupName: string = groupName;
+    let isDM = false;
+    let modifiedGroupName = groupName;
     if (memberArray.length === 1) {
       alert("Member list cannot be empty");
       return;
@@ -392,7 +397,7 @@ const Home = ({ userId, socket }: HomeProps) => {
             onClick={navigateLogin}
             onKeyDown={(e) => e.key === "Enter" && navigateLogin()}
             style={{ color: "#ADC2FC", cursor: "pointer", display: "inline" }}
-            tabIndex={0}
+            tabIndex={showCreateConversation ? -1 : 0}
           >
             Log in here.
           </span>

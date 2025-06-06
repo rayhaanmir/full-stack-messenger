@@ -17,7 +17,7 @@ const MessageWindow = ({ allMessages, idLoaded }: MessageWindowProps) => {
   return (
     <div className="main-wrapper">
       <div className="empty-space" />
-      {conversationMessages?.["messages"].map((msg, index: number) => (
+      {conversationMessages?.["messages"].map((msg, index) => (
         <Message
           key={msg._id}
           {...msg}

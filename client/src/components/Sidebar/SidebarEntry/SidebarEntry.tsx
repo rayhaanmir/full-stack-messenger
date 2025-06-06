@@ -1,3 +1,4 @@
+import { FaCircle } from "react-icons/fa";
 import "./SidebarEntry.css";
 
 export interface SidebarEntryProps {
@@ -10,13 +11,13 @@ export interface SidebarEntryProps {
   lastUpdated: number;
   userId?: string;
   showCreateConversation?: boolean;
-  idLoaded: string | undefined;
+  idLoaded?: string | undefined;
+  updateAlert?: boolean;
   onClickConversation?: (entry: SidebarEntryProps) => void;
 }
 
 const SidebarEntry = (props: SidebarEntryProps) => {
   const {
-    userId,
     _id,
     chatId,
     isDM,
@@ -24,8 +25,10 @@ const SidebarEntry = (props: SidebarEntryProps) => {
     lastUser,
     lastMessage,
     lastUpdated,
+    userId,
     showCreateConversation,
     idLoaded,
+    updateAlert,
     onClickConversation,
   } = props;
   return (
@@ -43,6 +46,11 @@ const SidebarEntry = (props: SidebarEntryProps) => {
       tabIndex={showCreateConversation ? -1 : 0}
       onKeyDown={(e) => e.key === "Enter" && onClickConversation?.(props)}
     >
+      {updateAlert && (
+        <div className="icon-wrapper">
+          <FaCircle />
+        </div>
+      )}
       {isDM ? (userId === members[0] ? members[1] : members[0]) : chatId}
     </div>
   );

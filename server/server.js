@@ -88,21 +88,18 @@ app.get("/api/messages", async (req, res) => {
 io.on("connection", async (socket) => {
   console.log(`a user has connected from the socket "${socket.id}"`);
 
-  socket.on("custom-event", (msg) => {
-    console.clear();
-    process.stdout.write(msg); // No newline
-  });
-
   socket.on("validate-username", async (name, callback) => {
     const userExists = await User.findOne({ userId: name });
-    if (userExists) {
-      socket.join(name);
-    }
     callback(!!userExists);
   });
 
-  socket.on("join-conversation", (conversationId) =>
-    socket.join(conversationId)
+  socket.on("join-user-room", async (userId) => await socket.join(userId));
+
+  socket.on("leave-user-room", async (userId) => await socket.join(userId));
+
+  socket.on(
+    "join-conversation",
+    async (conversationId) => await socket.join(conversationId)
   );
 
   socket.on(
@@ -122,15 +119,12 @@ io.on("connection", async (socket) => {
           { _id: conversationId },
           { lastUpdated: Date.now(), lastUser: sender, lastMessage: text }
         );
-        for (const user of conversation.members) {
-          console.log(`Updating ${user}'s conversations`);
-          io.to(user).emit(
-            "receive-conversation-update",
-            conversationId,
-            sender,
-            text
-          );
-        }
+        io.to(conversation.members).emit(
+          "receive-conversation-update",
+          conversationId,
+          sender,
+          text
+        );
         console.log(`Sent conversation update "${conversationId}"`);
         messageSent(true);
       } catch (e) {
