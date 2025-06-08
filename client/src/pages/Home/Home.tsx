@@ -1,16 +1,17 @@
+import type { Socket } from "socket.io-client";
+import type { SidebarEntryProps } from "../../components/Home/Sidebar/SidebarEntry/SidebarEntry.tsx";
+import type { MessageProps } from "../../components/Home/MessageWindow/Message/Message.tsx";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import type { Socket } from "socket.io-client";
-import type { SidebarEntryProps } from "../..//components/Sidebar/SidebarEntry/SidebarEntry.tsx";
-import type { MessageProps } from "../../components/MessageWindow/Message/Message.tsx";
-import CreateConversationForm from "../../components/CreateConversationForm/CreateConversationForm.tsx";
-import Sidebar from "../../components/Sidebar/Sidebar.tsx";
+import CreateConversationForm from "../../components/Home/CreateConversationForm/CreateConversationForm.tsx";
+import Sidebar from "../../components/Home/Sidebar/Sidebar.tsx";
 import { FaArrowRight } from "react-icons/fa";
 import { IoIosSend } from "react-icons/io";
-import MessageWindow from "../../components/MessageWindow/MessageWindow.tsx";
-import { playSound } from "react-sounds";
+import MessageWindow from "../../components/Home/MessageWindow/MessageWindow.tsx";
 import TextareaAutosize from "react-textarea-autosize";
-import notifySound from "../../assets/sounds/notification-pluck-off-269290.mp3";
+import { useSocketHandlers } from "../../hooks/useSocketHandlers.ts";
+import { validateUsernames } from "../../utils/validateUsernames.ts";
+import { fetchMessages } from "../../utils/fetchMessages.ts";
 import "./Home.css";
 
 interface HomeProps {
@@ -60,82 +61,14 @@ const Home = ({ userId, socket }: HomeProps) => {
     conversationLoadedRef.current = conversationLoaded;
   }, [conversationLoaded]);
 
-  useEffect(() => {
-    socket?.emit("join-user-room", userId);
-    const handleReceiveMessage = (msg: MessageProps) => {
-      const newConversationMessages = allMessagesRef.current.get(
-        msg.conversationId
-      );
-      if (newConversationMessages) {
-        const newMessages = [msg, ...newConversationMessages.messages];
-        const updatedEntry = {
-          messages: newMessages,
-          animationState: true,
-        };
-        setAllMessages((old) => {
-          const newMap = new Map(old);
-          newMap.set(msg.conversationId, updatedEntry);
-          return newMap;
-        });
-        setTimeout(
-          () =>
-            setAllMessages((old) => {
-              const newMap = new Map(old);
-              const existing = newMap.get(msg.conversationId);
-              if (existing) {
-                newMap.set(msg.conversationId, {
-                  ...existing,
-                  animationState: false,
-                });
-              }
-              return newMap;
-            }),
-          10
-        );
-      }
-    };
-
-    const handleReceiveConversation = (conversation: SidebarEntryProps) => {
-      setItems((old) => [conversation, ...old]);
-    };
-
-    const handleReceiveConversationUpdate = (
-      conversationId: string,
-      sender: string,
-      message: string
-    ) => {
-      setItems((prev) => {
-        const updated = [...prev];
-        const index = updated.findIndex(
-          (conversation) => conversation._id === conversationId
-        );
-        if (index !== -1) {
-          const [removed] = updated.splice(index, 1);
-          removed.lastUser = sender;
-          removed.lastMessage = message;
-          if (conversationId !== conversationLoadedRef.current?._id) {
-            removed.updateAlert = true;
-            playSound(notifySound);
-          }
-          updated.unshift(removed);
-        }
-        return updated;
-      });
-    };
-
-    socket?.on("receive-message", handleReceiveMessage);
-    socket?.on("receive-conversation", handleReceiveConversation);
-    socket?.on("receive-conversation-update", handleReceiveConversationUpdate);
-
-    return () => {
-      socket?.off("receive-message", handleReceiveMessage);
-      socket?.off("receive-conversation", handleReceiveConversation);
-      socket?.off(
-        "receive-conversation-update",
-        handleReceiveConversationUpdate
-      );
-    };
-  }, [socket]);
+  useSocketHandlers({
+    socket,
+    userId,
+    allMessagesRef,
+    conversationLoadedRef,
+    setAllMessages,
+    setItems,
+  });
 
   const fetchConversations = async () => {
     const res = await fetch(
@@ -211,52 +144,6 @@ const Home = ({ userId, socket }: HomeProps) => {
     );
   };
 
-  const validateUsernames = async (
-    usernameArray: string[]
-  ): Promise<boolean> => {
-    const checks = usernameArray.map((name) => {
-      return new Promise<boolean>((resolve) => {
-        socket?.emit("validate-username", name, (exists: boolean) => {
-          resolve(exists);
-        });
-      });
-    });
-    const results = await Promise.all(checks);
-    for (let i = 0; i < usernameArray.length; i++) {
-      if (!results[i]) {
-        alert(`The user "${usernameArray[i]}" does not exist`);
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const fetchMessages = async (
-    conversationId: string,
-    before: number = 0,
-    limit: number = 0
-  ): Promise<MessageProps[]> => {
-    const params = new URLSearchParams({
-      conversationId,
-      limit: limit.toString(),
-    });
-
-    if (before) {
-      params.append("before", before.toString());
-    }
-
-    const res = await fetch(
-      `http://192.168.1.30:3000/api/messages?${params.toString()}`
-    );
-
-    if (!res.ok) {
-      alert("Failed to fetch messages");
-    }
-
-    const messages: MessageProps[] = await res.json();
-    return messages;
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault(); // Prevents newline
@@ -276,7 +163,7 @@ const Home = ({ userId, socket }: HomeProps) => {
       alert("Member list cannot be empty");
       return;
     }
-    const valid = await validateUsernames(memberArray.slice(0, -1)); // skip current user
+    const valid = await validateUsernames(socket, memberArray.slice(0, -1)); // skip current user
     if (!valid) return;
     if (memberArray.length === 2) {
       if (!groupName) {
