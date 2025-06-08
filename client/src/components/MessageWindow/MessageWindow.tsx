@@ -15,18 +15,21 @@ const MessageWindow = ({ allMessages, idLoaded }: MessageWindowProps) => {
   if (idLoaded) {
     conversationMessages = allMessages.get(idLoaded);
   }
+
+  const messages = conversationMessages?.["messages"].map((msg, index) => (
+    <Message
+      key={msg._id}
+      {...msg}
+      startMessageAnimation={
+        index === 0 && conversationMessages["animationState"]
+      }
+    />
+  ));
+
   return (
     <div className="main-wrapper">
       <div className="empty-space" />
-      {conversationMessages?.["messages"].map((msg, index) => (
-        <Message
-          key={msg._id}
-          {...msg}
-          startMessageAnimation={
-            index === 0 && conversationMessages["animationState"]
-          }
-        />
-      ))}
+      {messages}
     </div>
   );
 };
