@@ -9,12 +9,14 @@ import { FaArrowRight } from "react-icons/fa";
 import { IoIosSend } from "react-icons/io";
 import MessageWindow from "../../components/MessageWindow/MessageWindow.tsx";
 import { playSound } from "react-sounds";
+import TextareaAutosize from "react-textarea-autosize";
 import notifySound from "../../assets/sounds/notification-pluck-off-269290.mp3";
 import "./Home.css";
 
 interface HomeProps {
   userId: string;
   socket: Socket | null;
+  isMobile: boolean;
 }
 
 const Home = ({ userId, socket }: HomeProps) => {
@@ -155,7 +157,7 @@ const Home = ({ userId, socket }: HomeProps) => {
     navigate("/login");
   };
 
-  const handleClickConversation = async (entry: SidebarEntryProps) => {
+  const onClickConversation = async (entry: SidebarEntryProps) => {
     if (entry._id !== conversationLoaded?._id) {
       setConversationLoaded?.(entry);
       const currentItems = items;
@@ -186,8 +188,6 @@ const Home = ({ userId, socket }: HomeProps) => {
       updated.set(conversationLoaded?._id, e.target.value);
       return updated;
     });
-    e.target.style.height = "inherit";
-    e.target.style.height = e.target.scrollHeight + "px";
   };
 
   const handleSubmitMessage = (e: React.FormEvent<HTMLFormElement>) => {
@@ -304,53 +304,111 @@ const Home = ({ userId, socket }: HomeProps) => {
     );
   };
 
+  const handleTransitionEnd = (e: React.TransitionEvent<HTMLDivElement>) => {
+    if (e.propertyName === "width") {
+      setAnimateSidebarWidth(false);
+      if (fullWidth) {
+        setRenderSidebar(false);
+      }
+    }
+  };
+
+  const sidebarProps = {
+    SidebarEntries: items,
+    fullWidth,
+    setAnimateSidebarWidth,
+    setFullWidth,
+    setShowCreateConversation,
+    setRenderCreate,
+    userId,
+    showCreateConversation,
+    idLoaded: conversationLoaded?._id,
+    setConversationLoaded,
+    onClickConversation,
+  };
+
+  const middleWrapperProps: {
+    className: string;
+    style:
+      | { filter: string; pointerEvents: "none"; width?: undefined }
+      | { width: string; filter?: undefined; pointerEvents?: undefined }
+      | { filter?: undefined; pointerEvents?: undefined; width?: undefined };
+    onTransitionEnd: (e: React.TransitionEvent<HTMLDivElement>) => void;
+  } = {
+    className: `middle-wrapper${animateSidebarWidth ? " animate" : ""}`,
+    style: showCreateConversation
+      ? { filter: "blur(0.1rem)", pointerEvents: "none" }
+      : fullWidth
+      ? { width: "100vw" }
+      : {},
+    onTransitionEnd: handleTransitionEnd,
+  };
+
+  const openButtonProps = {
+    className: "open-button",
+    tabIndex: showCreateConversation ? -1 : 0,
+    onClick: () => {
+      setRenderSidebar(true);
+      setAnimateSidebarWidth(true);
+      setFullWidth(false);
+    },
+    title: "Open the sidebar",
+  };
+
+  const messageWindowProps = {
+    allMessages,
+    idLoaded: conversationLoaded?._id,
+  };
+
+  const textareaAutosizeProps = {
+    className: "message-body",
+    value: allMessageBodies.get(conversationLoaded?._id),
+    onChange: handleChange,
+    onKeyDown: handleKeyDown,
+    placeholder: `Message ${
+      conversationLoaded?.isDM
+        ? conversationLoaded?.members[0]
+        : `"${conversationLoaded?.chatId}"`
+    }`,
+    tabIndex: showCreateConversation ? -1 : 0,
+  };
+
+  const messageButtonProps: {
+    className: string;
+    type: "submit";
+    tabIndex: number;
+  } = {
+    className: "message-button",
+    type: "submit",
+    tabIndex: showCreateConversation ? -1 : 0,
+  };
+
+  const spanProps = {
+    onClick: navigateLogin,
+    onKeyDown: (e: React.KeyboardEvent<HTMLSpanElement>) =>
+      e.key === "Enter" && navigateLogin(),
+    style: { color: "#ADC2FC", cursor: "pointer", display: "inline" },
+    tabIndex: showCreateConversation ? -1 : 0,
+  };
+
+  const createConversationFormProps = {
+    onClose: () => setShowCreateConversation(false),
+    onCreate: handleSubmitConversation,
+    members,
+    setMembers,
+    groupName,
+    setGroupName,
+    setRenderCreate,
+    showCreateConversation,
+  };
+
   return (
     <>
-      {renderSidebar && (
-        <Sidebar
-          SidebarEntries={items}
-          fullWidth={fullWidth}
-          setAnimateSidebarWidth={setAnimateSidebarWidth}
-          setFullWidth={setFullWidth}
-          setShowCreateConversation={setShowCreateConversation}
-          setRenderCreate={setRenderCreate}
-          userId={userId}
-          showCreateConversation={showCreateConversation}
-          idLoaded={conversationLoaded?._id}
-          setConversationLoaded={setConversationLoaded}
-          onClickConversation={handleClickConversation}
-        />
-      )}
-      <div
-        className={`middle-wrapper${animateSidebarWidth ? " animate" : ""}`}
-        style={
-          showCreateConversation
-            ? { filter: "blur(0.1rem)", pointerEvents: "none" }
-            : fullWidth
-            ? { width: "100vw" }
-            : {}
-        }
-        onTransitionEnd={(e) => {
-          if (e.propertyName === "width") {
-            setAnimateSidebarWidth(false);
-            if (fullWidth) {
-              setRenderSidebar(false);
-            }
-          }
-        }}
-      >
+      {renderSidebar && <Sidebar {...sidebarProps} />}
+      <div {...middleWrapperProps}>
         <div className="top-bar">
           {fullWidth && (
-            <button
-              className="open-button"
-              tabIndex={showCreateConversation ? -1 : 0}
-              onClick={() => {
-                setRenderSidebar(true);
-                setAnimateSidebarWidth(true);
-                setFullWidth(false);
-              }}
-              title="Open the sidebar"
-            >
+            <button {...openButtonProps}>
               <FaArrowRight />
             </button>
           )}
@@ -358,28 +416,10 @@ const Home = ({ userId, socket }: HomeProps) => {
 
         {conversationLoaded ? (
           <>
-            <MessageWindow
-              allMessages={allMessages}
-              idLoaded={conversationLoaded?._id}
-            />
+            <MessageWindow {...messageWindowProps} />
             <form className="message-form" onSubmit={handleSubmitMessage}>
-              <textarea
-                className="message-body"
-                value={allMessageBodies.get(conversationLoaded?._id)}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                placeholder={`Message ${
-                  conversationLoaded?.isDM
-                    ? conversationLoaded?.members[0]
-                    : `"${conversationLoaded?.chatId}"`
-                }`}
-                tabIndex={showCreateConversation ? -1 : 0}
-              />
-              <button
-                className="message-button"
-                type="submit"
-                tabIndex={showCreateConversation ? -1 : 0}
-              >
+              <TextareaAutosize {...textareaAutosizeProps} />
+              <button {...messageButtonProps}>
                 Send
                 <IoIosSend />
               </button>
@@ -393,27 +433,11 @@ const Home = ({ userId, socket }: HomeProps) => {
         )}
         <div className="bottom-wrapper">
           {"Not you? "}
-          <span
-            onClick={navigateLogin}
-            onKeyDown={(e) => e.key === "Enter" && navigateLogin()}
-            style={{ color: "#ADC2FC", cursor: "pointer", display: "inline" }}
-            tabIndex={showCreateConversation ? -1 : 0}
-          >
-            Log in here.
-          </span>
+          <span {...spanProps}>Log in here.</span>
         </div>
       </div>
       {renderCreate && (
-        <CreateConversationForm
-          onClose={() => setShowCreateConversation(false)}
-          onCreate={handleSubmitConversation}
-          members={members}
-          setMembers={setMembers}
-          groupName={groupName}
-          setGroupName={setGroupName}
-          setRenderCreate={setRenderCreate}
-          showCreateConversation={showCreateConversation}
-        />
+        <CreateConversationForm {...createConversationFormProps} />
       )}
     </>
   );

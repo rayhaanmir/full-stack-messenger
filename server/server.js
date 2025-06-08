@@ -95,7 +95,7 @@ io.on("connection", async (socket) => {
 
   socket.on("join-user-room", async (userId) => await socket.join(userId));
 
-  socket.on("leave-user-room", async (userId) => await socket.join(userId));
+  socket.on("leave-user-room", async (userId) => await socket.leave(userId));
 
   socket.on(
     "join-conversation",

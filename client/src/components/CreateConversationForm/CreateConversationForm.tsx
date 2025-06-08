@@ -22,47 +22,56 @@ const CreateConversationForm = ({
   setRenderCreate,
   showCreateConversation,
 }: CreateConversationFormProps) => {
+  const formWrapperProps = {
+    className: `form-wrapper${showCreateConversation ? " active" : ""}`,
+    onTransitionEnd: (e: React.TransitionEvent<HTMLDivElement>) => {
+      if (e.propertyName === "top") {
+        if (!showCreateConversation) {
+          setRenderCreate(false);
+        }
+      }
+    },
+  };
+
+  const iconCloseWrapperProps = {
+    className: "icon-close-wrapper",
+    onClick: onClose,
+    onKeyDown: (e: React.KeyboardEvent<HTMLSpanElement>) =>
+      e.key === "Enter" && onClose(),
+    tabIndex: 0,
+  };
+
+  const memberListProps = {
+    className: "member-list",
+    type: "text",
+    value: members,
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+      setMembers(e.target.value.replace(/\s/g, "")), // prevent users from typing/pasting whitespaces
+    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) =>
+      e.key === " " && e.preventDefault(), // ignore typed spaces
+    placeholder: "Members (comma-seperated list of user IDs)",
+    tabIndex: 0,
+  };
+
+  const chatNameProps = {
+    className: "chat-name",
+    type: "text",
+    value: groupName,
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+      setGroupName(e.target.value),
+    placeholder: "Group chat name (optional for DMs)",
+    tabIndex: 0,
+  };
+
   return (
     <>
-      <div
-        className={`form-wrapper${showCreateConversation ? " active" : ""}`}
-        onTransitionEnd={(e) => {
-          if (e.propertyName === "top") {
-            if (!showCreateConversation) {
-              setRenderCreate(false);
-            }
-          }
-        }}
-      >
-        <div
-          className="icon-close-wrapper"
-          onClick={onClose}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              onClose();
-            }
-          }}
-          tabIndex={0}
-        >
+      <div {...formWrapperProps}>
+        <div {...iconCloseWrapperProps}>
           <IoMdCloseCircle />
         </div>
         <form className="create-conversation-form" onSubmit={onCreate}>
-          <input
-            className="member-list"
-            type="text"
-            value={members}
-            onChange={(e) => setMembers(e.target.value.trim())} // trim prevents users from typing spaces
-            placeholder="Members (comma seperated list of user IDs)"
-            tabIndex={0}
-          />
-          <input
-            className="chat-name"
-            type="text"
-            value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
-            placeholder="Group chat name (optional for DMs)"
-            tabIndex={0}
-          />
+          <input {...memberListProps} />
+          <input {...chatNameProps} />
           <button className="submit-form" type="submit" tabIndex={0}>
             Create
           </button>

@@ -31,57 +31,68 @@ const Sidebar = ({
   setConversationLoaded,
   onClickConversation,
 }: SidebarProps) => {
+  const sidebarWrapperProps: {
+    className: string;
+    style: { filter: string; pointerEvents: "none" } | {};
+  } = {
+    className: "sidebar-wrapper",
+    style: showCreateConversation
+      ? { filter: "blur(0.1rem)", pointerEvents: "none" }
+      : {},
+  };
+
+  const createButtonProps = {
+    className: "create-button",
+    onClick: () => {
+      setRenderCreate(true);
+      requestAnimationFrame(() => setShowCreateConversation(true));
+    },
+    tabIndex: showCreateConversation ? -1 : 0,
+  };
+
+  const closeButtonProps = {
+    className: "close-button",
+    title: "Close this sidebar",
+    onClick: () => {
+      setAnimateSidebarWidth(true);
+      setFullWidth(true);
+    },
+    tabIndex: showCreateConversation ? -1 : 0,
+  };
+
+  const emptySpaceProps = {
+    className: "empty-space",
+    onClick: () => setConversationLoaded(null),
+  };
+
+  const conversations = SidebarEntries.map((item) => {
+    return (
+      <SidebarEntry
+        key={item._id}
+        {...item}
+        userId={userId}
+        showCreateConversation={showCreateConversation}
+        idLoaded={idLoaded}
+        onClickConversation={onClickConversation}
+      />
+    );
+  });
+
   return (
     <>
-      <div
-        className="sidebar-wrapper"
-        style={
-          showCreateConversation
-            ? { filter: "blur(0.1rem)", pointerEvents: "none" }
-            : {}
-        }
-      >
+      <div {...sidebarWrapperProps}>
         <div className="button-row" title="Create a new conversation">
-          <button
-            className="create-button"
-            onClick={() => {
-              setRenderCreate(true);
-              requestAnimationFrame(() => setShowCreateConversation(true));
-            }}
-            tabIndex={showCreateConversation ? -1 : 0}
-          >
+          <button {...createButtonProps}>
             Create conversation
             <FaPlus />
           </button>
-          <button
-            className="close-button"
-            title="Close this sidebar"
-            onClick={() => {
-              setAnimateSidebarWidth(true);
-              setFullWidth(true);
-            }}
-            tabIndex={showCreateConversation ? -1 : 0}
-          >
+          <button {...closeButtonProps}>
             <FaArrowLeft />
           </button>
         </div>
         <div className="entries-wrapper">
-          {SidebarEntries.map((item) => {
-            return (
-              <SidebarEntry
-                key={item._id}
-                {...item}
-                userId={userId}
-                showCreateConversation={showCreateConversation}
-                idLoaded={idLoaded}
-                onClickConversation={onClickConversation}
-              />
-            );
-          })}
-          <div
-            className="empty-space"
-            onClick={() => setConversationLoaded(null)}
-          />
+          {conversations}
+          <div {...emptySpaceProps} />
         </div>
       </div>
     </>

@@ -31,21 +31,24 @@ const SidebarEntry = (props: SidebarEntryProps) => {
     updateAlert,
     onClickConversation,
   } = props;
+
+  const entryProps = {
+    className: "entry",
+    style:
+      idLoaded === _id
+        ? {
+            fontStyle: isDM ? "auto" : "italic",
+            backgroundColor: "#757575",
+          }
+        : { fontStyle: isDM ? "auto" : "italic" },
+    onClick: () => idLoaded !== _id && onClickConversation?.(props),
+    tabIndex: showCreateConversation ? -1 : 0,
+    onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) =>
+      e.key === "Enter" && onClickConversation?.(props),
+  };
+
   return (
-    <div
-      className="entry"
-      style={
-        idLoaded === _id
-          ? {
-              fontStyle: isDM ? "auto" : "italic",
-              backgroundColor: "#757575",
-            }
-          : { fontStyle: isDM ? "auto" : "italic" }
-      }
-      onClick={() => idLoaded !== _id && onClickConversation?.(props)}
-      tabIndex={showCreateConversation ? -1 : 0}
-      onKeyDown={(e) => e.key === "Enter" && onClickConversation?.(props)}
-    >
+    <div {...entryProps}>
       {updateAlert && (
         <div className="icon-wrapper">
           <FaCircle />

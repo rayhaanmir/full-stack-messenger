@@ -7,13 +7,14 @@ interface MessageWindowProps {
     string,
     { messages: MessageProps[]; animationState: boolean } | undefined
   >;
-  idLoaded: string;
+  idLoaded: string | undefined;
 }
 
 const MessageWindow = ({ allMessages, idLoaded }: MessageWindowProps) => {
-  const conversationMessages:
-    | { messages: MessageProps[]; animationState: boolean }
-    | undefined = allMessages.get(idLoaded);
+  let conversationMessages;
+  if (idLoaded) {
+    conversationMessages = allMessages.get(idLoaded);
+  }
   return (
     <div className="main-wrapper">
       <div className="empty-space" />
@@ -22,7 +23,7 @@ const MessageWindow = ({ allMessages, idLoaded }: MessageWindowProps) => {
           key={msg._id}
           {...msg}
           startMessageAnimation={
-            conversationMessages["animationState"] && index == 0
+            index === 0 && conversationMessages["animationState"]
           }
         />
       ))}

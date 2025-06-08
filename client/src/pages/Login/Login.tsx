@@ -6,6 +6,7 @@ import type { Socket } from "socket.io-client";
 interface LoginProps {
   onLogin: (userId: string) => void;
   socket: Socket | null;
+  isMobile: boolean;
 }
 
 const Login = ({ onLogin, socket }: LoginProps) => {
@@ -30,14 +31,17 @@ const Login = ({ onLogin, socket }: LoginProps) => {
     });
   };
 
+  const usernameInputProps = {
+    className: "username-input",
+    value: name,
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+      setName(e.target.value),
+    placeholder: "Enter your username",
+  };
+
   return (
     <form className="login-form" onSubmit={handleSubmit}>
-      <input
-        className="username-input"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Enter your username"
-      />
+      <input {...usernameInputProps} />
       <button type="submit" className="sign-in-button">
         Sign In
       </button>

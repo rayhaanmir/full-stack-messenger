@@ -1,6 +1,7 @@
 import { io, Socket } from "socket.io-client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
+import { isMobile } from "react-device-detect";
 import "./App.css";
 import Login from "./pages/Login/Login.tsx";
 import Home from "./pages/Home/Home.tsx";
@@ -51,6 +52,7 @@ const App = () => {
                 setUserId(id);
               }}
               socket={socketRef.current}
+              isMobile={isMobile}
             />
           }
         />
@@ -58,7 +60,11 @@ const App = () => {
           path="/home"
           element={
             loading ? null : userId ? (
-              <Home userId={userId} socket={socketRef.current} />
+              <Home
+                userId={userId}
+                socket={socketRef.current}
+                isMobile={isMobile}
+              />
             ) : (
               <Navigate to="/login" replace />
             )
