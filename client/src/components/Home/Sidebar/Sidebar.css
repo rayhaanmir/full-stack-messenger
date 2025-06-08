@@ -54,8 +54,8 @@
 
 .entries-wrapper {
   display: flex;
-  height: 100%;
   flex-direction: column;
+  height: calc(100% - 3rem);
   background-color: #b8b8b8;
   overflow-x: scroll;
 }
@@ -63,5 +63,4 @@
 .empty-space {
   display: flex;
   height: 100%;
-  width: 100%;
 }
