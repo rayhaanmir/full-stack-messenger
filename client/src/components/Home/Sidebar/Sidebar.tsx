@@ -17,28 +17,53 @@ interface SidebarProps {
     React.SetStateAction<SidebarEntryProps | null>
   >;
   onClickConversation: (entry: SidebarEntryProps) => void;
+  isMobile: boolean;
+  setRenderSidebar: React.Dispatch<React.SetStateAction<boolean>>;
+  animateSidebarWidth: boolean;
 }
 
 const Sidebar = ({
-  userId,
   SidebarEntries,
+  fullWidth,
   setAnimateSidebarWidth,
   setFullWidth,
   setShowCreateConversation,
   setRenderCreate,
+  userId,
   showCreateConversation,
   idLoaded,
   setConversationLoaded,
   onClickConversation,
+  isMobile,
+  setRenderSidebar,
+  animateSidebarWidth,
 }: SidebarProps) => {
+  const handleTransitionEnd = (e: React.TransitionEvent<HTMLDivElement>) => {
+    if (isMobile) {
+      if (e.propertyName === "width") {
+        setAnimateSidebarWidth(false);
+        if (fullWidth) {
+          setRenderSidebar(false);
+        }
+      }
+    }
+  };
+
   const sidebarWrapperProps: {
     className: string;
     style: { filter: string; pointerEvents: "none" } | {};
+    onTransitionEnd: (e: React.TransitionEvent<HTMLDivElement>) => void;
   } = {
-    className: "sidebar-wrapper",
-    style: showCreateConversation
-      ? { filter: "blur(0.1rem)", pointerEvents: "none" }
-      : {},
+    className: `sidebar-wrapper${
+      isMobile && animateSidebarWidth ? " animate" : ""
+    }`,
+    style: {
+      width: isMobile && fullWidth ? "0" : "16rem",
+      zIndex: isMobile ? "1" : "inherit",
+      pointerEvents: showCreateConversation ? "none" : "auto",
+      filter: showCreateConversation ? "blur(0.1rem)" : "none",
+    },
+    onTransitionEnd: handleTransitionEnd,
   };
 
   const createButtonProps = {

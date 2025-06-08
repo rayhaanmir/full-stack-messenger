@@ -1,15 +1,15 @@
 .form-wrapper {
   position: fixed;
   top: -22rem;
-  right: calc(50% - 15rem);
   height: 20rem;
-  width: 30rem;
-  border-width: 0.5rem;
+  right: max(calc(50% - 15rem), 0rem);
+  width: min(30rem, 100%);
   background-color: #bbbbbb;
   color: black;
   border-radius: 1rem;
   transition: top ease 0.5s;
   box-shadow: 1rem 1rem 2rem black;
+  z-index: 2;
 }
 
 .form-wrapper.active {

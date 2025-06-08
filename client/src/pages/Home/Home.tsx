@@ -20,7 +20,7 @@ interface HomeProps {
   isMobile: boolean;
 }
 
-const Home = ({ userId, socket }: HomeProps) => {
+const Home = ({ userId, socket, isMobile }: HomeProps) => {
   const [showCreateConversation, setShowCreateConversation] = useState(false);
   const [members, setMembers] = useState("");
   const [groupName, setGroupName] = useState("");
@@ -42,7 +42,6 @@ const Home = ({ userId, socket }: HomeProps) => {
   const allMessagesRef = useRef(allMessages);
   const itemsRef = useRef(items);
   const conversationLoadedRef = useRef(conversationLoaded);
-
   useEffect(() => {
     if (userId) {
       fetchConversations();
@@ -146,7 +145,7 @@ const Home = ({ userId, socket }: HomeProps) => {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault(); // Prevents newline
+      e.preventDefault(); // Prevent newline
       (e.target as HTMLTextAreaElement).form?.requestSubmit(); // Submit the form
     }
   };
@@ -192,10 +191,12 @@ const Home = ({ userId, socket }: HomeProps) => {
   };
 
   const handleTransitionEnd = (e: React.TransitionEvent<HTMLDivElement>) => {
-    if (e.propertyName === "width") {
-      setAnimateSidebarWidth(false);
-      if (fullWidth) {
-        setRenderSidebar(false);
+    if (!isMobile) {
+      if (e.propertyName === "width") {
+        setAnimateSidebarWidth(false);
+        if (fullWidth) {
+          setRenderSidebar(false);
+        }
       }
     }
   };
@@ -212,22 +213,24 @@ const Home = ({ userId, socket }: HomeProps) => {
     idLoaded: conversationLoaded?._id,
     setConversationLoaded,
     onClickConversation,
+    isMobile,
+    setRenderSidebar,
+    animateSidebarWidth,
   };
 
   const middleWrapperProps: {
     className: string;
-    style:
-      | { filter: string; pointerEvents: "none"; width?: undefined }
-      | { width: string; filter?: undefined; pointerEvents?: undefined }
-      | { filter?: undefined; pointerEvents?: undefined; width?: undefined };
+    style: { width: string; pointerEvents: "none" | "auto"; filter: string };
     onTransitionEnd: (e: React.TransitionEvent<HTMLDivElement>) => void;
   } = {
-    className: `middle-wrapper${animateSidebarWidth ? " animate" : ""}`,
-    style: showCreateConversation
-      ? { filter: "blur(0.1rem)", pointerEvents: "none" }
-      : fullWidth
-      ? { width: "100vw" }
-      : {},
+    className: `middle-wrapper${
+      !isMobile && animateSidebarWidth ? " animate" : ""
+    }`,
+    style: {
+      width: isMobile || fullWidth ? "100vw" : "calc(100vw - 16rem)",
+      pointerEvents: showCreateConversation ? "none" : "auto",
+      filter: showCreateConversation ? "blur(0.1rem)" : "none",
+    },
     onTransitionEnd: handleTransitionEnd,
   };
 
@@ -237,7 +240,7 @@ const Home = ({ userId, socket }: HomeProps) => {
     onClick: () => {
       setRenderSidebar(true);
       setAnimateSidebarWidth(true);
-      setFullWidth(false);
+      requestAnimationFrame(() => setFullWidth(false));
     },
     title: "Open the sidebar",
   };

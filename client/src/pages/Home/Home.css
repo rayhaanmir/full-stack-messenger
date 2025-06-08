@@ -63,7 +63,6 @@
   justify-content: center;
   background-color: #242424;;
   height: 100vh;
-  width: calc(100vw - 16rem);
   right: 0;
   transition: filter ease 0.5s;
 }
