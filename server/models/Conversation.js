@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema({
-  chatId: { type: String, required: true },
+  conversationName: { type: String, required: true },
   isDM: { type: Boolean, required: true },
   members: [{ type: String, required: true }],
   lastUser: { type: String, default: "" },

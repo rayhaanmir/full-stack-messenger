@@ -13,14 +13,17 @@ import { useSocketHandlers } from "../../hooks/useSocketHandlers.ts";
 import { validateUsernames } from "../../utils/validateUsernames.ts";
 import { fetchMessages } from "../../utils/fetchMessages.ts";
 import "./Home.css";
-
+// TODO stop relying on usernames as identifiers
 interface HomeProps {
-  userId: string;
-  socket: Socket | null;
+  username: string;
+  socket: Socket;
   isMobile: boolean;
 }
 
-const Home = ({ userId, socket, isMobile }: HomeProps) => {
+const host = import.meta.env.VITE_SERVER_IP;
+const port = import.meta.env.VITE_SERVER_PORT;
+
+const Home = ({ username, socket, isMobile }: HomeProps) => {
   const [showCreateConversation, setShowCreateConversation] = useState(false);
   const [members, setMembers] = useState("");
   const [groupName, setGroupName] = useState("");
@@ -43,10 +46,9 @@ const Home = ({ userId, socket, isMobile }: HomeProps) => {
   const itemsRef = useRef(items);
   const conversationLoadedRef = useRef(conversationLoaded);
   useEffect(() => {
-    if (userId) {
-      fetchConversations();
-    }
-  }, [userId]);
+    socket.emit("join-user-room");
+    fetchConversations();
+  }, []);
 
   useEffect(() => {
     allMessagesRef.current = allMessages;
@@ -62,17 +64,38 @@ const Home = ({ userId, socket, isMobile }: HomeProps) => {
 
   useSocketHandlers({
     socket,
-    userId,
+    username,
     allMessagesRef,
     conversationLoadedRef,
     setAllMessages,
     setItems,
   });
-
   const fetchConversations = async () => {
-    const res = await fetch(
-      `http://192.168.1.30:3000/api/conversations/${userId}`
-    );
+    let res = await fetch(`http://${host}:${port}/api/conversations`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+      },
+    });
+    if (res.status == 401) {
+      const refreshRes = await fetch(`http://${host}:${port}/api/refresh`, {
+        method: "GET",
+        credentials: "include",
+      });
+      if (refreshRes.ok) {
+        const token = await refreshRes.json();
+        localStorage.setItem("accessToken", token.accessToken);
+        res = await fetch(`http://${host}:${port}/api/conversations`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        });
+      } else {
+        localStorage.removeItem("accessToken");
+        navigateLogin();
+      }
+    }
     const data: SidebarEntryProps[] = await res.json();
     setAllMessageBodies((old) => {
       const updated = new Map(old);
@@ -85,7 +108,10 @@ const Home = ({ userId, socket, isMobile }: HomeProps) => {
   };
 
   const navigateLogin = () => {
-    socket?.emit("leave-user-room", userId);
+    socket.disconnect();
+    fetch(`http://${host}:${port}/api/logout`, {
+      method: "DELETE",
+    });
     navigate("/login");
   };
 
@@ -100,8 +126,13 @@ const Home = ({ userId, socket, isMobile }: HomeProps) => {
       setItems(currentItems);
       if (!allMessages.has(entry._id)) {
         // TODO Limit loaded messages and implement dynamically loading older messages
-        socket?.emit("join-conversation", entry._id);
-        const currentMessages: MessageProps[] = await fetchMessages(entry._id);
+        socket.emit("join-conversation", entry._id);
+        const currentMessages: MessageProps[] = await fetchMessages({
+          host,
+          port,
+          conversationId: entry._id,
+          navigateLogin,
+        });
         setAllMessages((old) => {
           const updated = new Map(old);
           updated.set(entry._id, {
@@ -124,9 +155,9 @@ const Home = ({ userId, socket, isMobile }: HomeProps) => {
 
   const handleSubmitMessage = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    socket?.emit(
+    socket.emit(
       "send-message",
-      userId,
+      username,
       [], // TODO Implement mentioning specific users
       allMessageBodies.get(conversationLoaded?._id),
       conversationLoaded?._id,
@@ -155,19 +186,20 @@ const Home = ({ userId, socket, isMobile }: HomeProps) => {
   ) => {
     e.preventDefault();
     const memberArray = members.split(",");
-    memberArray.push(userId);
+    memberArray.push(username);
     let isDM = false;
     let modifiedGroupName = groupName;
     if (memberArray.length === 1) {
       alert("Member list cannot be empty");
       return;
     }
+
     const valid = await validateUsernames(socket, memberArray.slice(0, -1)); // skip current user
     if (!valid) return;
     if (memberArray.length === 2) {
       if (!groupName) {
         isDM = true;
-        modifiedGroupName = userId + "_" + memberArray[0];
+        modifiedGroupName = username + "_" + memberArray[0];
       }
     } else {
       if (!groupName) {
@@ -175,7 +207,7 @@ const Home = ({ userId, socket, isMobile }: HomeProps) => {
         return;
       }
     }
-    socket?.emit(
+    socket.emit(
       "create-conversation",
       modifiedGroupName,
       isDM,
@@ -208,7 +240,7 @@ const Home = ({ userId, socket, isMobile }: HomeProps) => {
     setFullWidth,
     setShowCreateConversation,
     setRenderCreate,
-    userId,
+    username,
     showCreateConversation,
     idLoaded: conversationLoaded?._id,
     setConversationLoaded,
@@ -317,7 +349,7 @@ const Home = ({ userId, socket, isMobile }: HomeProps) => {
           </>
         ) : (
           <div className="greeting-wrapper">
-            <h1>Welcome, {userId}!</h1>
+            <h1>Welcome, {username}!</h1>
             <p>Select a conversation and get to chatting!</p>
           </div>
         )}

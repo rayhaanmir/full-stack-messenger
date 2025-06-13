@@ -9,7 +9,7 @@ export interface SidebarEntryProps {
   lastUser: string;
   lastMessage: string;
   lastUpdated: number;
-  userId?: string;
+  username?: string;
   showCreateConversation?: boolean;
   idLoaded?: string | undefined;
   updateAlert?: boolean;
@@ -25,7 +25,7 @@ const SidebarEntry = (props: SidebarEntryProps) => {
     lastUser,
     lastMessage,
     lastUpdated,
-    userId,
+    username,
     showCreateConversation,
     idLoaded,
     updateAlert,
@@ -54,7 +54,7 @@ const SidebarEntry = (props: SidebarEntryProps) => {
           <FaCircle />
         </div>
       )}
-      {isDM ? (userId === members[0] ? members[1] : members[0]) : chatId}
+      {isDM ? (username === members[0] ? members[1] : members[0]) : chatId}
     </div>
   );
 };

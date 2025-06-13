@@ -10,7 +10,7 @@ interface SidebarProps {
   setFullWidth: React.Dispatch<React.SetStateAction<boolean>>;
   setShowCreateConversation: React.Dispatch<React.SetStateAction<boolean>>;
   setRenderCreate: React.Dispatch<React.SetStateAction<boolean>>;
-  userId: string;
+  username: string;
   showCreateConversation: boolean;
   idLoaded: string | undefined;
   setConversationLoaded: React.Dispatch<
@@ -29,7 +29,7 @@ const Sidebar = ({
   setFullWidth,
   setShowCreateConversation,
   setRenderCreate,
-  userId,
+  username,
   showCreateConversation,
   idLoaded,
   setConversationLoaded,
@@ -95,7 +95,7 @@ const Sidebar = ({
       <SidebarEntry
         key={item._id}
         {...item}
-        userId={userId}
+        username={username}
         showCreateConversation={showCreateConversation}
         idLoaded={idLoaded}
         onClickConversation={onClickConversation}

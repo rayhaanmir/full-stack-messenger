@@ -6,8 +6,8 @@ import type { SidebarEntryProps } from "../components/Home/Sidebar/SidebarEntry/
 import type { MessageProps } from "../components/Home/MessageWindow/Message/Message.tsx";
 
 interface UseSocketHandlersProps {
-  socket: Socket | null;
-  userId: string;
+  socket: Socket;
+  username: string;
   allMessagesRef: React.RefObject<
     Map<
       string,
@@ -34,14 +34,14 @@ interface UseSocketHandlersProps {
 
 export const useSocketHandlers = ({
   socket,
-  userId,
+  username,
   allMessagesRef,
   setAllMessages,
   setItems,
   conversationLoadedRef,
 }: UseSocketHandlersProps) => {
   useEffect(() => {
-    socket?.emit("join-user-room", userId);
+    socket.emit("join-user-room", username);
     const handleReceiveMessage = (msg: MessageProps) => {
       const newConversationMessages = allMessagesRef.current.get(
         msg.conversationId
@@ -103,14 +103,14 @@ export const useSocketHandlers = ({
       });
     };
 
-    socket?.on("receive-message", handleReceiveMessage);
-    socket?.on("receive-conversation", handleReceiveConversation);
-    socket?.on("receive-conversation-update", handleReceiveConversationUpdate);
+    socket.on("receive-message", handleReceiveMessage);
+    socket.on("receive-conversation", handleReceiveConversation);
+    socket.on("receive-conversation-update", handleReceiveConversationUpdate);
 
     return () => {
-      socket?.off("receive-message", handleReceiveMessage);
-      socket?.off("receive-conversation", handleReceiveConversation);
-      socket?.off(
+      socket.off("receive-message", handleReceiveMessage);
+      socket.off("receive-conversation", handleReceiveConversation);
+      socket.off(
         "receive-conversation-update",
         handleReceiveConversationUpdate
       );

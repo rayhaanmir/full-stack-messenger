@@ -10,6 +10,13 @@
   border-style: solid;
 }
 
+.password-input {
+  outline: none;
+  border-radius: 0;
+  border-style: solid;
+  border-top: 0;
+}
+
 .sign-in-button {
   border-radius: 0;
   padding: 0.2rem;

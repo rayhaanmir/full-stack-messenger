@@ -1,12 +1,12 @@
 import type { Socket } from "socket.io-client";
 
 export const validateUsernames = async (
-  socket: Socket | null,
+  socket: Socket,
   usernameArray: string[]
 ): Promise<boolean> => {
-  const checks = usernameArray.map((name) => {
+  const checks = usernameArray.map((username) => {
     return new Promise<boolean>((resolve) => {
-      socket?.emit("validate-username", name, (exists: boolean) => {
+      socket.emit("validate-username", username, (exists: boolean) => {
         resolve(exists);
       });
     });
