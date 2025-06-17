@@ -29,7 +29,11 @@ try {
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://192.168.1.30:5173"],
+    origin: [
+      "http://localhost:5173",
+      "http://192.168.1.30:5173",
+      "http://full-stack-messenger.vercel.app",
+    ],
     methods: ["GET", "POST", "DELETE"],
     credentials: true,
   })
@@ -89,7 +93,7 @@ app.post("/api/login", async (req, res) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "none",
       maxAge: ms("2w"),
     });
     res.status(200).json({ accessToken, username, userId });
@@ -221,7 +225,11 @@ app.get("/api/messages", authenticateToken, async (req, res) => {
 
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "http://192.168.1.30:5173"],
+    origin: [
+      "http://localhost:5173",
+      "http://192.168.1.30:5173",
+      "http://full-stack-messenger.vercel.app",
+    ],
     methods: ["GET", "POST", "DELETE"],
   },
 });

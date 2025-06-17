@@ -56,7 +56,7 @@ const App = () => {
           localStorage.removeItem("username");
           localStorage.removeItem("userId");
           setUsername("");
-          setUserId("UNKNOWN_ID");
+          setUserId("");
         }
       } else {
         setAccessTokenValid(false);
