@@ -6,7 +6,8 @@ const messageSchema = new mongoose.Schema({
   members: [{ type: String, required: true }],
   lastUser: { type: String, default: "" },
   lastMessage: { type: String, default: "" },
-  lastUpdated: { type: Number, default: Date.now },
+  lastUpdated: { type: Number, required: true },
+  createTime: { type: Number, required: true },
 });
 
 messageSchema.index({ lastUpdated: -1 });

@@ -1,10 +1,12 @@
-import type { MessageProps } from "../components/Home/MessageWindow/Message/Message";
+import type { MessageProps } from "../../components/Home/MessageWindow/Message/Message";
 
-interface fetchMessagesProps {
+export interface fetchMessagesProps {
   host: string;
   port: number;
   conversationId: string;
   navigateLogin: () => void;
+  accessToken: string;
+  setAccessToken: React.Dispatch<React.SetStateAction<string>>;
   before?: number;
   limit?: number;
 }
@@ -14,6 +16,8 @@ export const fetchMessages = async ({
   port,
   conversationId,
   navigateLogin,
+  accessToken,
+  setAccessToken,
   before = 0,
   limit = 0,
 }: fetchMessagesProps): Promise<MessageProps[]> => {
@@ -31,24 +35,25 @@ export const fetchMessages = async ({
     {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     }
   );
   if (res.status === 401 || res.status === 403) {
     const refreshRes = await fetch(`http://${host}:${port}/api/refresh`, {
-      method: "GET",
+      method: "POST",
       credentials: "include",
     });
     if (refreshRes.ok) {
       const token = await refreshRes.json();
       localStorage.setItem("accessToken", token.accessToken);
+      setAccessToken(token.accessToken);
       res = await fetch(
         `http://${host}:${port}/api/messages?${params.toString()}`,
         {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         }
       );

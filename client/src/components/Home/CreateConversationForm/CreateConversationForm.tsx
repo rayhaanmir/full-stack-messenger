@@ -1,5 +1,6 @@
 import { IoMdCloseCircle } from "react-icons/io";
 import "./CreateConversationForm.css";
+import { useEffect, useRef } from "react";
 
 interface CreateConversationFormProps {
   onClose: () => void;
@@ -22,7 +23,29 @@ const CreateConversationForm = ({
   setRenderCreate,
   showCreateConversation,
 }: CreateConversationFormProps) => {
+  const formWrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        formWrapperRef.current &&
+        !formWrapperRef.current.contains(event.target as Node)
+      )
+        onClose();
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const formBackgroundProps = {
+    className: `form-background${showCreateConversation ? " active" : ""}`,
+  };
+
   const formWrapperProps = {
+    ref: formWrapperRef,
     className: `form-wrapper${showCreateConversation ? " active" : ""}`,
     onTransitionEnd: (e: React.TransitionEvent<HTMLDivElement>) => {
       if (e.propertyName === "top") {
@@ -64,7 +87,7 @@ const CreateConversationForm = ({
   };
 
   return (
-    <>
+    <div {...formBackgroundProps}>
       <div {...formWrapperProps}>
         <div {...iconCloseWrapperProps}>
           <IoMdCloseCircle />
@@ -77,7 +100,7 @@ const CreateConversationForm = ({
           </button>
         </form>
       </div>
-    </>
+    </div>
   );
 };
 

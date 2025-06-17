@@ -2,32 +2,37 @@ import type { Socket } from "socket.io-client";
 import type { SidebarEntryProps } from "../../components/Home/Sidebar/SidebarEntry/SidebarEntry.tsx";
 import type { MessageProps } from "../../components/Home/MessageWindow/Message/Message.tsx";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import CreateConversationForm from "../../components/Home/CreateConversationForm/CreateConversationForm.tsx";
 import Sidebar from "../../components/Home/Sidebar/Sidebar.tsx";
-import { FaArrowRight } from "react-icons/fa";
-import { IoIosSend } from "react-icons/io";
 import MessageWindow from "../../components/Home/MessageWindow/MessageWindow.tsx";
 import TextareaAutosize from "react-textarea-autosize";
+import Modal from "../../components/Home/Modal/Modal.tsx";
+import { FaArrowRight } from "react-icons/fa";
+import { IoIosSend } from "react-icons/io";
+import { IoIosLogOut } from "react-icons/io";
 import { useSocketHandlers } from "../../hooks/useSocketHandlers.ts";
-import { validateUsernames } from "../../utils/validateUsernames.ts";
-import { fetchMessages } from "../../utils/fetchMessages.ts";
+import { fetchConversations } from "../../utils/fetchConversations.ts";
+import { handleSubmitConversation } from "../../utils/handleSubmitConversation/handleSubmitConversation.ts";
+import { handleClickConversation } from "../../utils/handleClickConversation/handleClickConversation.ts";
 import "./Home.css";
-// TODO stop relying on usernames as identifiers
+
 interface HomeProps {
   username: string;
+  userId: string;
   socket: Socket;
   isMobile: boolean;
+  connected: boolean;
 }
 
 const host = import.meta.env.VITE_SERVER_IP;
 const port = import.meta.env.VITE_SERVER_PORT;
 
-const Home = ({ username, socket, isMobile }: HomeProps) => {
-  const [showCreateConversation, setShowCreateConversation] = useState(false);
-  const [members, setMembers] = useState("");
-  const [groupName, setGroupName] = useState("");
+const Home = ({ username, userId, socket, isMobile, connected }: HomeProps) => {
   const navigate = useNavigate();
+  const [showCreateConversation, setShowCreateConversation] = useState(false);
+  const [members, setMembers] = useState(""); // Comma separated list of members
+  const [groupName, setGroupName] = useState("");
   const [items, setItems] = useState<SidebarEntryProps[]>([]);
   const [fullWidth, setFullWidth] = useState(true);
   const [animateSidebarWidth, setAnimateSidebarWidth] = useState(false);
@@ -39,15 +44,27 @@ const Home = ({ username, socket, isMobile }: HomeProps) => {
     new Map<string, { messages: MessageProps[]; animationState: boolean }>()
   );
   const [allMessageBodies, setAllMessageBodies] = useState(
-    new Map<string | undefined, string>()
+    new Map<string, string>()
   );
+  const [accessToken, setAccessToken] = useState(
+    localStorage.getItem("accessToken") ?? ""
+  );
+  const [warningModalOpen, setWarningModelOpen] = useState(false);
 
   const allMessagesRef = useRef(allMessages);
   const itemsRef = useRef(items);
   const conversationLoadedRef = useRef(conversationLoaded);
   useEffect(() => {
     socket.emit("join-user-room");
-    fetchConversations();
+    fetchConversations({
+      host,
+      port,
+      navigateLogin,
+      accessToken,
+      setAccessToken,
+      setAllMessageBodies,
+      setItems,
+    });
   }, []);
 
   useEffect(() => {
@@ -70,85 +87,22 @@ const Home = ({ username, socket, isMobile }: HomeProps) => {
     setAllMessages,
     setItems,
   });
-  const fetchConversations = async () => {
-    let res = await fetch(`http://${host}:${port}/api/conversations`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-    });
-    if (res.status == 401) {
-      const refreshRes = await fetch(`http://${host}:${port}/api/refresh`, {
-        method: "GET",
-        credentials: "include",
-      });
-      if (refreshRes.ok) {
-        const token = await refreshRes.json();
-        localStorage.setItem("accessToken", token.accessToken);
-        res = await fetch(`http://${host}:${port}/api/conversations`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        });
-      } else {
-        localStorage.removeItem("accessToken");
-        navigateLogin();
-      }
-    }
-    const data: SidebarEntryProps[] = await res.json();
-    setAllMessageBodies((old) => {
-      const updated = new Map(old);
-      for (const conversation of data) {
-        updated.set(conversation._id, "");
-      }
-      return updated;
-    });
-    setItems(data);
-  };
 
   const navigateLogin = () => {
     socket.disconnect();
     fetch(`http://${host}:${port}/api/logout`, {
       method: "DELETE",
+      credentials: "include",
     });
+    localStorage.clear();
+    setAccessToken("");
     navigate("/login");
-  };
-
-  const onClickConversation = async (entry: SidebarEntryProps) => {
-    if (entry._id !== conversationLoaded?._id) {
-      setConversationLoaded?.(entry);
-      const currentItems = items;
-      const index = currentItems.findIndex(
-        (conversation) => conversation._id === entry._id
-      );
-      currentItems[index].updateAlert = false;
-      setItems(currentItems);
-      if (!allMessages.has(entry._id)) {
-        // TODO Limit loaded messages and implement dynamically loading older messages
-        socket.emit("join-conversation", entry._id);
-        const currentMessages: MessageProps[] = await fetchMessages({
-          host,
-          port,
-          conversationId: entry._id,
-          navigateLogin,
-        });
-        setAllMessages((old) => {
-          const updated = new Map(old);
-          updated.set(entry._id, {
-            messages: currentMessages,
-            animationState: false,
-          });
-          return updated;
-        });
-      }
-    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setAllMessageBodies((old) => {
       const updated = new Map(old);
-      updated.set(conversationLoaded?._id, e.target.value);
+      updated.set(conversationLoaded?._id ?? "", e.target.value);
       return updated;
     });
   };
@@ -159,7 +113,7 @@ const Home = ({ username, socket, isMobile }: HomeProps) => {
       "send-message",
       username,
       [], // TODO Implement mentioning specific users
-      allMessageBodies.get(conversationLoaded?._id),
+      allMessageBodies.get(conversationLoaded?._id ?? ""),
       conversationLoaded?._id,
       (successful: boolean) => {
         if (!successful) {
@@ -167,7 +121,7 @@ const Home = ({ username, socket, isMobile }: HomeProps) => {
         }
         setAllMessageBodies((old) => {
           const newMap = new Map(old);
-          newMap.set(conversationLoaded?._id, "");
+          newMap.set(conversationLoaded?._id ?? "", "");
           return newMap;
         });
       }
@@ -181,47 +135,6 @@ const Home = ({ username, socket, isMobile }: HomeProps) => {
     }
   };
 
-  const handleSubmitConversation = async (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
-    e.preventDefault();
-    const memberArray = members.split(",");
-    memberArray.push(username);
-    let isDM = false;
-    let modifiedGroupName = groupName;
-    if (memberArray.length === 1) {
-      alert("Member list cannot be empty");
-      return;
-    }
-
-    const valid = await validateUsernames(socket, memberArray.slice(0, -1)); // skip current user
-    if (!valid) return;
-    if (memberArray.length === 2) {
-      if (!groupName) {
-        isDM = true;
-        modifiedGroupName = username + "_" + memberArray[0];
-      }
-    } else {
-      if (!groupName) {
-        alert("Group name cannot be empty");
-        return;
-      }
-    }
-    socket.emit(
-      "create-conversation",
-      modifiedGroupName,
-      isDM,
-      memberArray,
-      (successful: boolean) => {
-        if (!successful) {
-          alert("Failed to create conversation");
-        }
-        setMembers("");
-        setGroupName("");
-      }
-    );
-  };
-
   const handleTransitionEnd = (e: React.TransitionEvent<HTMLDivElement>) => {
     if (!isMobile) {
       if (e.propertyName === "width") {
@@ -231,6 +144,40 @@ const Home = ({ username, socket, isMobile }: HomeProps) => {
         }
       }
     }
+  };
+
+  const onCreate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    handleSubmitConversation({
+      members,
+      groupName,
+      setMembers,
+      setGroupName,
+      socket,
+      userId,
+    });
+  };
+
+  const onClickConversation = async (entry: SidebarEntryProps) => {
+    const fetchMessagesItems = {
+      host,
+      port,
+      conversationId: entry._id,
+      navigateLogin,
+      accessToken,
+      setAccessToken,
+    };
+    handleClickConversation({
+      socket,
+      entry,
+      conversationLoaded,
+      allMessages,
+      items,
+      setConversationLoaded,
+      setAllMessages,
+      setItems,
+      fetchMessagesItems,
+    });
   };
 
   const sidebarProps = {
@@ -252,7 +199,7 @@ const Home = ({ username, socket, isMobile }: HomeProps) => {
 
   const middleWrapperProps: {
     className: string;
-    style: { width: string; pointerEvents: "none" | "auto"; filter: string };
+    style: { width: string };
     onTransitionEnd: (e: React.TransitionEvent<HTMLDivElement>) => void;
   } = {
     className: `middle-wrapper${
@@ -260,8 +207,6 @@ const Home = ({ username, socket, isMobile }: HomeProps) => {
     }`,
     style: {
       width: isMobile || fullWidth ? "100vw" : "calc(100vw - 16rem)",
-      pointerEvents: showCreateConversation ? "none" : "auto",
-      filter: showCreateConversation ? "blur(0.1rem)" : "none",
     },
     onTransitionEnd: handleTransitionEnd,
   };
@@ -277,6 +222,20 @@ const Home = ({ username, socket, isMobile }: HomeProps) => {
     title: "Open the sidebar",
   };
 
+  const logoutIconWrapperProps = {
+    className: "logout-icon-wrapper",
+    tabIndex: -1,
+  };
+
+  const logoutIconProps = {
+    className: "logout-icon",
+    tabIndex: showCreateConversation ? -1 : 0,
+    onClick: navigateLogin,
+    onKeyDown: (e: React.KeyboardEvent<HTMLSpanElement>) =>
+      e.key === "Enter" && navigateLogin(),
+    title: "Log out",
+  };
+
   const messageWindowProps = {
     allMessages,
     idLoaded: conversationLoaded?._id,
@@ -284,13 +243,13 @@ const Home = ({ username, socket, isMobile }: HomeProps) => {
 
   const textareaAutosizeProps = {
     className: "message-body",
-    value: allMessageBodies.get(conversationLoaded?._id),
+    value: allMessageBodies.get(conversationLoaded?._id ?? ""),
     onChange: handleChange,
     onKeyDown: handleKeyDown,
     placeholder: `Message ${
       conversationLoaded?.isDM
         ? conversationLoaded?.members[0]
-        : `"${conversationLoaded?.chatId}"`
+        : `"${conversationLoaded?.conversationName}"`
     }`,
     tabIndex: showCreateConversation ? -1 : 0,
   };
@@ -315,7 +274,7 @@ const Home = ({ username, socket, isMobile }: HomeProps) => {
 
   const createConversationFormProps = {
     onClose: () => setShowCreateConversation(false),
-    onCreate: handleSubmitConversation,
+    onCreate,
     members,
     setMembers,
     groupName,
@@ -334,6 +293,9 @@ const Home = ({ username, socket, isMobile }: HomeProps) => {
               <FaArrowRight />
             </button>
           )}
+          <div {...logoutIconWrapperProps}>
+            <IoIosLogOut {...logoutIconProps} />
+          </div>
         </div>
 
         {conversationLoaded ? (
@@ -353,13 +315,16 @@ const Home = ({ username, socket, isMobile }: HomeProps) => {
             <p>Select a conversation and get to chatting!</p>
           </div>
         )}
-        <div className="bottom-wrapper">
-          {"Not you? "}
-          <span {...spanProps}>Log in here.</span>
-        </div>
       </div>
       {renderCreate && (
         <CreateConversationForm {...createConversationFormProps} />
+      )}
+      {!connected && (
+        <Modal
+          modalText="Lost connection. Refresh the page if issue persists."
+          color="#C80000"
+          fontSize="1.5rem"
+        />
       )}
     </>
   );

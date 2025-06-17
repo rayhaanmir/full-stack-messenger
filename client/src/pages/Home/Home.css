@@ -6,16 +6,6 @@
   transition: filter ease 0.5s;
 }
 
-.bottom-wrapper {
-  display: inline-block;
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  margin-right: 1rem;
-  margin-bottom: 0.9rem;
-  font-size: 1rem;
-}
-
 .basic-input {
   border-radius: 0;
   border-style: solid;
@@ -25,7 +15,6 @@
 .message-form {
   display: flex;
   flex-direction: column;
-  margin-bottom: 3rem;
   width: 100%;
 }
 
@@ -90,4 +79,22 @@
 
 .open-button:active {
   background-color: #505050;
+}
+
+.logout-icon-wrapper {
+  display: flex;
+  position: absolute;
+  right: 0;
+  height: 100%;
+  width: 2.5rem;
+  align-items: center;
+}
+
+.logout-icon {
+  font-size: 2rem;
+}
+
+.logout-icon:hover {
+  
+  cursor: pointer;
 }

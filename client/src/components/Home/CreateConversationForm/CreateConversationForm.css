@@ -1,3 +1,16 @@
+.form-background {
+  width: 100vw;
+  height: 100vh;
+  z-index: 4;
+  position: absolute;
+  backdrop-filter: 0;
+  transition: backdrop-filter ease 0.5s;
+}
+
+.form-background.active {
+  backdrop-filter: blur(0.1rem);
+}
+
 .form-wrapper {
   position: fixed;
   top: -22rem;
@@ -9,7 +22,7 @@
   border-radius: 1rem;
   transition: top ease 0.5s;
   box-shadow: 1rem 1rem 2rem black;
-  z-index: 2;
+  z-index: 5;
 }
 
 .form-wrapper.active {
@@ -55,7 +68,6 @@
   top: 1rem;
   right: 1rem;
   font-size: 1.5rem;
-  outline: none;
 }
 
 .icon-close-wrapper:hover {

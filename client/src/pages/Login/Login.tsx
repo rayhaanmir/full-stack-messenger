@@ -4,22 +4,28 @@ import "./Login.css";
 import type { Socket } from "socket.io-client";
 
 interface LoginProps {
-  socket: Socket;
+  socket: Socket | null;
   isMobile: boolean;
+  username: string;
+  setUsername: React.Dispatch<React.SetStateAction<string>>;
+  setUserId: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const Login = ({ socket }: LoginProps) => {
-  const [username, setUsername] = useState(
-    () => localStorage.getItem("username") ?? ""
-  );
+const Login = ({
+  socket,
+  isMobile,
+  username,
+  setUsername,
+  setUserId,
+}: LoginProps) => {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const waitForConnection = (cb: () => void) => {
-    if (socket.connected) {
+    if (socket?.connected) {
       cb();
     } else {
-      socket.once("connect", cb);
-      socket.connect();
+      socket?.once("connect", cb);
+      socket?.connect();
     }
   };
 
@@ -35,8 +41,11 @@ const Login = ({ socket }: LoginProps) => {
       credentials: "include",
     });
     if (res.ok) {
-      const { accessToken } = await res.json();
+      const { accessToken, userId } = await res.json();
       localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("username", username);
+      localStorage.setItem("userId", userId);
+      setUserId(userId);
       waitForConnection(() => navigate("/home"));
     } else {
       alert("Login failed");

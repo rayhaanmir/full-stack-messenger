@@ -6,12 +6,28 @@ import Login from "./pages/Login/Login.tsx";
 import socket from "./lib/socket.ts";
 import Home from "./pages/Home/Home.tsx";
 
+const host = import.meta.env.VITE_SERVER_IP;
+const port = import.meta.env.VITE_SERVER_PORT;
+
 const App = () => {
-  const [accessToken, setAccessToken] = useState(
-    () => localStorage.getItem("accessToken") ?? ""
-  );
   const [connected, setConnected] = useState(false);
   const [accessTokenValid, setAccessTokenValid] = useState(true);
+  const [username, setUsername] = useState(
+    localStorage.getItem("username") ?? ""
+  );
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [userId, setUserId] = useState(localStorage.getItem("userId") ?? "");
+
+  useEffect(() => {
+    if (location.pathname === "/home") {
+      socket.connect();
+    }
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [location.pathname]);
+
   useEffect(() => {
     const handleConnect = () => setConnected(true);
     const handleDisconnect = () => setConnected(false);
@@ -22,49 +38,67 @@ const App = () => {
         err.message === "Access token expired or invalid" ||
         err.message === "Error: No token provided"
       ) {
-        const res = await fetch("http://192.168.1.30:3000/api/refresh", {
-          method: "GET",
+        const res = await fetch(`http://${host}:${port}/api/refresh`, {
+          method: "POST",
           credentials: "include",
         });
         const data = await res.json();
         if (res.ok) {
           localStorage.setItem("accessToken", data.accessToken);
+          localStorage.setItem("username", data.username);
+          localStorage.setItem("userId", data.userId);
+          setUsername(data.username);
+          setUserId(data.userId);
           socket.connect(); // reconnect with new token
         } else {
           setAccessTokenValid(false);
           localStorage.removeItem("accessToken");
+          localStorage.removeItem("username");
+          localStorage.removeItem("userId");
+          setUsername("");
+          setUserId("UNKNOWN_ID");
         }
       } else {
         setAccessTokenValid(false);
       }
     });
 
-    socket.on("user-info", (username) => {
-      localStorage.setItem("username", username);
-    });
     return () => {
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
     };
   }, []);
 
+  useEffect(() => {
+    if (connected) setLoggedIn(true);
+  }, [connected, accessTokenValid]);
+
+  const homeProps = {
+    username,
+    userId,
+    socket,
+    isMobile,
+    connected,
+  };
+
+  const loginProps = {
+    socket,
+    isMobile,
+    username,
+    setUsername,
+    setUserId,
+  };
+
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/home" replace />} />
-        <Route
-          path="/login"
-          element={<Login socket={socket} isMobile={isMobile} />}
-        />
+        <Route path="/login" element={<Login {...loginProps} />} />
         <Route
           path="/home"
           element={
-            connected ? (
-              <Home
-                username={localStorage.getItem("username") ?? "UNKNOWN_USER"}
-                socket={socket}
-                isMobile={isMobile}
-              />
+            loggedIn ? (
+              <Home {...homeProps} />
             ) : accessTokenValid ? null : (
               <Navigate to="/login" replace />
             )

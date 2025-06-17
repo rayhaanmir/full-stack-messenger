@@ -3,12 +3,13 @@ import "./SidebarEntry.css";
 
 export interface SidebarEntryProps {
   _id: string;
-  chatId: string;
+  conversationName: string;
   isDM: boolean;
   members: string[];
   lastUser: string;
   lastMessage: string;
   lastUpdated: number;
+  createTime: number;
   username?: string;
   showCreateConversation?: boolean;
   idLoaded?: string | undefined;
@@ -19,12 +20,13 @@ export interface SidebarEntryProps {
 const SidebarEntry = (props: SidebarEntryProps) => {
   const {
     _id,
-    chatId,
+    conversationName,
     isDM,
     members,
     lastUser,
     lastMessage,
     lastUpdated,
+    createTime,
     username,
     showCreateConversation,
     idLoaded,
@@ -54,7 +56,11 @@ const SidebarEntry = (props: SidebarEntryProps) => {
           <FaCircle />
         </div>
       )}
-      {isDM ? (username === members[0] ? members[1] : members[0]) : chatId}
+      {isDM
+        ? username === members[0]
+          ? members[1]
+          : members[0]
+        : conversationName}
     </div>
   );
 };

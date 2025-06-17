@@ -4,9 +4,11 @@ import bcrypt from "bcrypt";
 const SALT_ROUNDS = 10;
 
 const refreshTokenSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
+  userId: { type: mongoose.Types.ObjectId, ref: "User", required: true },
+  refreshTokenMetadata: { type: String, required: true },
   tokenHash: { type: String, required: true },
-  timestamp: { type: Number, default: Date.now },
+  timestamp: { type: Number, required: true },
+  expiryDate: { type: Number, required: true },
 });
 
 refreshTokenSchema.pre("save", async function (next) {

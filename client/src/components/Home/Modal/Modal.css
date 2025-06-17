@@ -1,0 +1,18 @@
+.modal-background {
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  position: absolute;
+}
+
+.modal-body {
+  display: flex;
+  width: 90%;
+  height: 3rem;
+  margin: 4rem auto;
+  border-radius: 0.5rem;
+  z-index: 10;
+  box-shadow: 0 0 1rem black;
+  justify-content: center;
+  align-items: center;
+}

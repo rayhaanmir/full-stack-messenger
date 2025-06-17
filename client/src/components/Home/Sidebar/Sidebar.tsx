@@ -60,8 +60,6 @@ const Sidebar = ({
     style: {
       width: isMobile && fullWidth ? "0" : "16rem",
       zIndex: isMobile ? "1" : "inherit",
-      pointerEvents: showCreateConversation ? "none" : "auto",
-      filter: showCreateConversation ? "blur(0.1rem)" : "none",
     },
     onTransitionEnd: handleTransitionEnd,
   };
