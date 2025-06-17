@@ -231,7 +231,7 @@ const Home = ({ username, userId, socket, isMobile, connected }: HomeProps) => {
     className: "logout-icon",
     tabIndex: showCreateConversation ? -1 : 0,
     onClick: navigateLogin,
-    onKeyDown: (e: React.KeyboardEvent<HTMLSpanElement>) =>
+    onKeyDown: (e: React.KeyboardEvent<SVGElement>) =>
       e.key === "Enter" && navigateLogin(),
     title: "Log out",
   };
@@ -261,14 +261,6 @@ const Home = ({ username, userId, socket, isMobile, connected }: HomeProps) => {
   } = {
     className: "message-button",
     type: "submit",
-    tabIndex: showCreateConversation ? -1 : 0,
-  };
-
-  const spanProps = {
-    onClick: navigateLogin,
-    onKeyDown: (e: React.KeyboardEvent<HTMLSpanElement>) =>
-      e.key === "Enter" && navigateLogin(),
-    style: { color: "#ADC2FC", cursor: "pointer", display: "inline" },
     tabIndex: showCreateConversation ? -1 : 0,
   };
 
