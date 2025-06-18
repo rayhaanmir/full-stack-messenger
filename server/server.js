@@ -13,12 +13,20 @@ import ms from "ms";
 import cookieParser from "cookie-parser";
 import bcrypt from "bcrypt";
 import { UAParser } from "ua-parser-js";
+import { rateLimit } from "express-rate-limit";
 
 dotenv.config();
 const app = express();
 const server = createServer(app);
 const host = process.env.SERVER_IP;
 const port = parseInt(process.env.SERVER_PORT);
+
+const limiter = rateLimit({
+  windowMs: ms("15m"),
+  limit: 100,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+});
 
 try {
   await mongoose.connect(process.env.MONGO_URI);
@@ -27,13 +35,10 @@ try {
   console.error(err);
 }
 
+app.use(limiter);
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://192.168.1.30:5173",
-      "http://full-stack-messenger.vercel.app",
-    ],
+    origin: ["http://localhost:5173", "http://192.168.1.30:5173"],
     methods: ["GET", "POST", "DELETE"],
     credentials: true,
   })
@@ -144,7 +149,7 @@ app.post("/api/refresh", async (req, res) => {
   }
 });
 
-app.post("/api/create-user", async (req, res) => {
+app.post("/api/create-user", authenticateToken, async (req, res) => {
   const { username, passwordHash } = req.body;
 
   if (!username || typeof username !== "string") {
@@ -225,11 +230,7 @@ app.get("/api/messages", authenticateToken, async (req, res) => {
 
 const io = new Server(server, {
   cors: {
-    origin: [
-      "http://localhost:5173",
-      "http://192.168.1.30:5173",
-      "http://full-stack-messenger.vercel.app",
-    ],
+    origin: ["http://localhost:5173", "http://192.168.1.30:5173"],
     methods: ["GET", "POST", "DELETE"],
   },
 });
