@@ -7,6 +7,8 @@ export interface fetchMessagesProps {
   navigateLogin: () => void;
   accessToken: string;
   setAccessToken: React.Dispatch<React.SetStateAction<string>>;
+  setWarningModalText: React.Dispatch<React.SetStateAction<string>>;
+  setWarningModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   before?: number;
   limit?: number;
 }
@@ -18,6 +20,8 @@ export const fetchMessages = async ({
   navigateLogin,
   accessToken,
   setAccessToken,
+  setWarningModalText,
+  setWarningModalOpen,
   before = 0,
   limit = 0,
 }: fetchMessagesProps): Promise<MessageProps[]> => {
@@ -64,7 +68,8 @@ export const fetchMessages = async ({
   }
 
   if (!res.ok) {
-    alert("Failed to fetch messages");
+    setWarningModalText("Failed to fetch messages");
+    setWarningModalOpen(true);
   }
 
   const messages: MessageProps[] = await res.json();

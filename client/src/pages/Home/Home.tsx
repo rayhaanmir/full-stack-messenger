@@ -49,7 +49,8 @@ const Home = ({ username, userId, socket, isMobile, connected }: HomeProps) => {
   const [accessToken, setAccessToken] = useState(
     localStorage.getItem("accessToken") ?? ""
   );
-  const [warningModalOpen, setWarningModelOpen] = useState(false);
+  const [warningModalOpen, setWarningModalOpen] = useState(false);
+  const [warningModalText, setWarningModalText] = useState("");
 
   const allMessagesRef = useRef(allMessages);
   const itemsRef = useRef(items);
@@ -117,7 +118,8 @@ const Home = ({ username, userId, socket, isMobile, connected }: HomeProps) => {
       conversationLoaded?._id,
       (successful: boolean) => {
         if (!successful) {
-          alert("Message failed to send");
+          setWarningModalText("Message failed to send");
+          setWarningModalOpen(true);
         }
         setAllMessageBodies((old) => {
           const newMap = new Map(old);
@@ -155,6 +157,8 @@ const Home = ({ username, userId, socket, isMobile, connected }: HomeProps) => {
       setGroupName,
       socket,
       userId,
+      setWarningModalText,
+      setWarningModalOpen,
     });
   };
 
@@ -166,6 +170,8 @@ const Home = ({ username, userId, socket, isMobile, connected }: HomeProps) => {
       navigateLogin,
       accessToken,
       setAccessToken,
+      setWarningModalText,
+      setWarningModalOpen,
     };
     handleClickConversation({
       socket,
@@ -258,10 +264,12 @@ const Home = ({ username, userId, socket, isMobile, connected }: HomeProps) => {
     className: string;
     type: "submit";
     tabIndex: number;
+    disabled: boolean;
   } = {
     className: "message-button",
     type: "submit",
     tabIndex: showCreateConversation ? -1 : 0,
+    disabled: !allMessageBodies.get(conversationLoaded?._id ?? ""),
   };
 
   const createConversationFormProps = {
@@ -311,11 +319,25 @@ const Home = ({ username, userId, socket, isMobile, connected }: HomeProps) => {
       {renderCreate && (
         <CreateConversationForm {...createConversationFormProps} />
       )}
+      {warningModalOpen && (
+        <Modal
+          modalText={warningModalText}
+          setIsOpen={setWarningModalOpen}
+          color="#C80000"
+          fontSize="1rem"
+          blockPointer={true}
+          center={true}
+          dimScreen={true}
+        />
+      )}
       {!connected && (
         <Modal
           modalText="Lost connection. Refresh the page if issue persists."
           color="#C80000"
           fontSize="1.5rem"
+          blockPointer={false}
+          center={false}
+          dimScreen={false}
         />
       )}
     </>

@@ -2,7 +2,9 @@ import type { Socket } from "socket.io-client";
 
 export const validateUsernames = (
   socket: Socket,
-  usernameArray: string[]
+  usernameArray: string[],
+  setWarningModalText: React.Dispatch<React.SetStateAction<string>>,
+  setWarningModalOpen: React.Dispatch<React.SetStateAction<boolean>>
 ): Promise<string[] | null> => {
   return new Promise((resolve) => {
     socket.emit(
@@ -10,7 +12,8 @@ export const validateUsernames = (
       usernameArray,
       (result: string[] | string) => {
         if (typeof result === "string") {
-          alert(`User "${result}" not found`);
+          setWarningModalText(`User "${result}" not found`);
+          setWarningModalOpen(true);
           resolve(null);
         } else {
           resolve(result);

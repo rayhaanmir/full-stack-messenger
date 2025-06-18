@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import "./Modal.css";
 
 interface ModalProps {
@@ -6,6 +7,8 @@ interface ModalProps {
   blockPointer?: boolean;
   color?: string;
   fontSize?: string;
+  center?: boolean;
+  dimScreen: boolean;
 }
 
 const Modal = ({
@@ -14,21 +17,48 @@ const Modal = ({
   blockPointer,
   color,
   fontSize,
+  center,
+  dimScreen,
 }: ModalProps) => {
+  const modalBodyRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (blockPointer) {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          modalBodyRef.current &&
+          !modalBodyRef.current.contains(event.target as Node)
+        )
+          setIsOpen?.(false);
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, []);
+
+  const modalBackgroundProps = {
+    className: "modal-background",
+    style: {
+      backgroundColor: dimScreen ? "#00000045" : "transparent",
+    },
+  };
+
+  const modalBodyProps = {
+    className: "modal-body",
+    ref: modalBodyRef,
+    style: {
+      backgroundColor: color ? color : "red",
+      fontSize: fontSize ? fontSize : "inherit",
+      margin: center ? "auto" : "4rem auto",
+    },
+  };
   return (
     <>
-      {blockPointer && (
-        <div className="modal-background" onClick={() => setIsOpen?.(false)} />
-      )}
-      <div
-        className="modal-body"
-        style={{
-          backgroundColor: color ? color : "red",
-          fontSize: fontSize ? fontSize : "inherit",
-        }}
-      >
-        {modalText}
-      </div>
+      {blockPointer && <div {...modalBackgroundProps} />}
+      <div {...modalBodyProps}>{modalText}</div>
     </>
   );
 };

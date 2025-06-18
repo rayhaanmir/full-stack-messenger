@@ -93,7 +93,7 @@ app.post("/api/login", async (req, res) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: "strict",
       maxAge: ms("2w"),
     });
     res.status(200).json({ accessToken, username, userId });

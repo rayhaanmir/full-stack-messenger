@@ -30,7 +30,11 @@ const App = () => {
 
   useEffect(() => {
     const handleConnect = () => setConnected(true);
-    const handleDisconnect = () => setConnected(false);
+    const handleDisconnect = () => {
+      setTimeout(() => {
+        if (!socket.connected) setConnected(false);
+      }, 1000);
+    };
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
     socket.on("connect_error", async (err) => {

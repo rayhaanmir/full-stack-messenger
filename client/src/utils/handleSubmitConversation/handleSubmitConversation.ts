@@ -8,6 +8,8 @@ interface handleSubmitConversationProps {
   setGroupName: React.Dispatch<React.SetStateAction<string>>;
   socket: Socket;
   userId: string;
+  setWarningModalText: React.Dispatch<React.SetStateAction<string>>;
+  setWarningModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const handleSubmitConversation = async ({
@@ -17,15 +19,25 @@ export const handleSubmitConversation = async ({
   setGroupName,
   socket,
   userId,
+  setWarningModalText,
+  setWarningModalOpen,
 }: handleSubmitConversationProps) => {
   const memberArray = members.split(",");
   let isDM = false;
   let modifiedGroupName = groupName;
+  let userIdArray: string[] | null = null;
   if (memberArray.length === 0) {
-    alert("Member list cannot be empty");
+    setWarningModalText("Member list cannot be empty");
+    setWarningModalOpen(true);
     return;
+  } else {
+    userIdArray = await validateUsernames(
+      socket,
+      memberArray,
+      setWarningModalText,
+      setWarningModalOpen
+    );
   }
-  const userIdArray = await validateUsernames(socket, memberArray);
   if (!userIdArray) return;
   if (userIdArray.length === 1) {
     if (!groupName) {
@@ -34,7 +46,8 @@ export const handleSubmitConversation = async ({
     }
   } else {
     if (!groupName) {
-      alert("Group name cannot be empty");
+      setWarningModalText("Group name cannot be empty");
+      setWarningModalOpen(true);
       return;
     }
   }
@@ -45,7 +58,8 @@ export const handleSubmitConversation = async ({
     userIdArray,
     (successful: boolean) => {
       if (!successful) {
-        alert("Failed to create conversation");
+        setWarningModalText("Failed to create conversation");
+        setWarningModalOpen(true);
       }
       setMembers("");
       setGroupName("");
