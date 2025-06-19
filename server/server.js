@@ -18,7 +18,6 @@ import { rateLimit } from "express-rate-limit";
 dotenv.config();
 const app = express();
 const server = createServer(app);
-const host = process.env.SERVER_IP;
 const port = parseInt(process.env.SERVER_PORT);
 
 const limiter = rateLimit({
@@ -38,7 +37,10 @@ try {
 app.use(limiter);
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://192.168.1.30:5173"],
+    origin:
+      process.env.NODE_ENV === "production"
+        ? ["https://full-stack-messenger.vercel.app"]
+        : ["http://localhost:5173", "http://192.168.1.30:5173"],
     methods: ["GET", "POST", "DELETE"],
     credentials: true,
   })
@@ -98,7 +100,7 @@ app.post("/api/login", async (req, res) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "none",
       maxAge: ms("2w"),
     });
     res.status(200).json({ accessToken, username, userId });
@@ -230,7 +232,10 @@ app.get("/api/messages", authenticateToken, async (req, res) => {
 
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "http://192.168.1.30:5173"],
+    origin:
+      process.env.NODE_ENV === "production"
+        ? ["https://full-stack-messenger.vercel.app"]
+        : ["http://localhost:5173", "http://192.168.1.30:5173"],
     methods: ["GET", "POST", "DELETE"],
   },
 });
@@ -347,6 +352,7 @@ io.on("connection", async (socket) => {
   });
 });
 
-server.listen(port, host, () => {
-  console.log(`server running at http://${host}:${port}`);
+server.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+  server.address;
 });

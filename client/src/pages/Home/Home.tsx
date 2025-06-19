@@ -91,10 +91,15 @@ const Home = ({ username, userId, socket, isMobile, connected }: HomeProps) => {
 
   const navigateLogin = () => {
     socket.disconnect();
-    fetch(`http://${host}:${port}/api/logout`, {
-      method: "DELETE",
-      credentials: "include",
-    });
+    fetch(
+      `${
+        import.meta.env.MODE === "production" ? "https" : "http"
+      }://${host}:${port}/api/logout`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    );
     localStorage.clear();
     setAccessToken("");
     navigate("/login");
