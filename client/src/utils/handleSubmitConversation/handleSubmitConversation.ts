@@ -25,19 +25,18 @@ export const handleSubmitConversation = async ({
   const memberArray = members.split(",");
   let isDM = false;
   let modifiedGroupName = groupName;
-  let userIdArray: string[] | null = null;
-  if (memberArray.length === 0) {
+  if (!members) {
     setWarningModalText("Member list cannot be empty");
     setWarningModalOpen(true);
     return;
-  } else {
-    userIdArray = await validateUsernames(
-      socket,
-      memberArray,
-      setWarningModalText,
-      setWarningModalOpen
-    );
   }
+  const userIdArray = await validateUsernames(
+    socket,
+    memberArray,
+    setWarningModalText,
+    setWarningModalOpen
+  );
+
   if (!userIdArray) return;
   if (userIdArray.length === 1) {
     if (!groupName) {

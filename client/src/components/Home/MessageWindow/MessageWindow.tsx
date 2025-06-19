@@ -27,7 +27,7 @@ const MessageWindow = ({ allMessages, idLoaded }: MessageWindowProps) => {
   ));
 
   return (
-    <div className="main-wrapper">
+    <div className="main-wrapper" tabIndex={-1}>
       <div className="empty-space" />
       {messages}
     </div>

@@ -115,7 +115,7 @@ app.delete("/api/logout", async (req, res) => {
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
     await RefreshToken.findOneAndDelete({ userId: decoded.userId });
   } catch (err) {
-    // TODO (maybe): log suspicious logout
+    return res.status(401).json({ error: "Refresh token invalid" });
   }
   res.clearCookie("refreshToken");
   res.sendStatus(204);

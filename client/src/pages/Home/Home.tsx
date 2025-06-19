@@ -283,6 +283,25 @@ const Home = ({ username, userId, socket, isMobile, connected }: HomeProps) => {
     showCreateConversation,
   };
 
+  const warningModalProps = {
+    modalText: warningModalText,
+    setIsOpen: setWarningModalOpen,
+    color: "#C80000",
+    fontSize: "1rem",
+    blockPointer: true,
+    center: true,
+    dimScreen: true,
+  };
+
+  const connectedModalProps = {
+    modalText: "Lost connection. Refresh the page if issue persists.",
+    color: "#C80000",
+    fontSize: "1.5rem",
+    blockPointer: false,
+    center: false,
+    dimScreen: false,
+  };
+
   return (
     <>
       {renderSidebar && <Sidebar {...sidebarProps} />}
@@ -319,27 +338,8 @@ const Home = ({ username, userId, socket, isMobile, connected }: HomeProps) => {
       {renderCreate && (
         <CreateConversationForm {...createConversationFormProps} />
       )}
-      {warningModalOpen && (
-        <Modal
-          modalText={warningModalText}
-          setIsOpen={setWarningModalOpen}
-          color="#C80000"
-          fontSize="1rem"
-          blockPointer={true}
-          center={true}
-          dimScreen={true}
-        />
-      )}
-      {!connected && (
-        <Modal
-          modalText="Lost connection. Refresh the page if issue persists."
-          color="#C80000"
-          fontSize="1.5rem"
-          blockPointer={false}
-          center={false}
-          dimScreen={false}
-        />
-      )}
+      {warningModalOpen && <Modal {...warningModalProps} />}
+      {!connected && <Modal {...connectedModalProps} />}
     </>
   );
 };

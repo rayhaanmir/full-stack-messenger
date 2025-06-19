@@ -52,7 +52,8 @@ const Modal = ({
     style: {
       backgroundColor: color ? color : "red",
       fontSize: fontSize ? fontSize : "inherit",
-      margin: center ? "auto" : "4rem auto",
+      top: center ? "50%" : "4rem",
+      translate: center ? "50% -50%" : "50%",
     },
   };
   return (
