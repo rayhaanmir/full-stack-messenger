@@ -1,8 +1,9 @@
 import type { MessageProps } from "../../components/Home/MessageWindow/Message/Message";
 
 export interface fetchMessagesProps {
+  protocol: string;
   host: string;
-  port: number;
+  port: string;
   conversationId: string;
   navigateLogin: () => void;
   accessToken: string;
@@ -14,6 +15,7 @@ export interface fetchMessagesProps {
 }
 
 export const fetchMessages = async ({
+  protocol,
   host,
   port,
   conversationId,
@@ -35,7 +37,7 @@ export const fetchMessages = async ({
   }
 
   let res = await fetch(
-    `http://${host}:${port}/api/messages?${params.toString()}`,
+    `${protocol}://${host}:${port}/api/messages?${params.toString()}`,
     {
       method: "GET",
       headers: {
@@ -44,16 +46,19 @@ export const fetchMessages = async ({
     }
   );
   if (res.status === 401 || res.status === 403) {
-    const refreshRes = await fetch(`http://${host}:${port}/api/refresh`, {
-      method: "POST",
-      credentials: "include",
-    });
+    const refreshRes = await fetch(
+      `${protocol}://${host}:${port}/api/refresh`,
+      {
+        method: "POST",
+        credentials: "include",
+      }
+    );
     if (refreshRes.ok) {
       const token = await refreshRes.json();
       localStorage.setItem("accessToken", token.accessToken);
       setAccessToken(token.accessToken);
       res = await fetch(
-        `http://${host}:${port}/api/messages?${params.toString()}`,
+        `${protocol}://${host}:${port}/api/messages?${params.toString()}`,
         {
           method: "GET",
           headers: {

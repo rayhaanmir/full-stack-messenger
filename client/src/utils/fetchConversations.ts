@@ -1,8 +1,9 @@
 import type { SidebarEntryProps } from "../components/Home/Sidebar/SidebarEntry/SidebarEntry";
 
 interface fetchConversationsProps {
+  protocol: string;
   host: string;
-  port: number;
+  port: string;
   navigateLogin: () => void;
   accessToken: string;
   setAccessToken: React.Dispatch<React.SetStateAction<string>>;
@@ -13,6 +14,7 @@ interface fetchConversationsProps {
 }
 
 export const fetchConversations = async ({
+  protocol,
   host,
   port,
   navigateLogin,
@@ -21,22 +23,25 @@ export const fetchConversations = async ({
   setAllMessageBodies,
   setItems,
 }: fetchConversationsProps) => {
-  let res = await fetch(`http://${host}:${port}/api/conversations`, {
+  let res = await fetch(`${protocol}://${host}:${port}/api/conversations`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
   if (res.status === 401) {
-    const refreshRes = await fetch(`http://${host}:${port}/api/refresh`, {
-      method: "POST",
-      credentials: "include",
-    });
+    const refreshRes = await fetch(
+      `${protocol}://${host}:${port}/api/refresh`,
+      {
+        method: "POST",
+        credentials: "include",
+      }
+    );
     if (refreshRes.ok) {
       const token = await refreshRes.json();
       localStorage.setItem("accessToken", token.accessToken);
       setAccessToken(token.accessToken);
-      res = await fetch(`http://${host}:${port}/api/conversations`, {
+      res = await fetch(`${protocol}://${host}:${port}/api/conversations`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,

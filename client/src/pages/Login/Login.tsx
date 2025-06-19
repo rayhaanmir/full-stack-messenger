@@ -9,6 +9,9 @@ interface LoginProps {
   username: string;
   setUsername: React.Dispatch<React.SetStateAction<string>>;
   setUserId: React.Dispatch<React.SetStateAction<string>>;
+  protocol: string;
+  host: string;
+  port: string;
 }
 
 const Login = ({
@@ -17,6 +20,9 @@ const Login = ({
   username,
   setUsername,
   setUserId,
+  protocol,
+  host,
+  port,
 }: LoginProps) => {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
@@ -31,7 +37,7 @@ const Login = ({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const res = await fetch("http://192.168.1.30:3000/api/login", {
+    const res = await fetch(`${protocol}://${host}:${port}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

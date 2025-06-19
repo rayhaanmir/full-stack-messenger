@@ -23,12 +23,21 @@ interface HomeProps {
   socket: Socket;
   isMobile: boolean;
   connected: boolean;
+  protocol: string;
+  host: string;
+  port: string;
 }
 
-const host = import.meta.env.VITE_SERVER_IP;
-const port = import.meta.env.VITE_SERVER_PORT;
-
-const Home = ({ username, userId, socket, isMobile, connected }: HomeProps) => {
+const Home = ({
+  username,
+  userId,
+  socket,
+  isMobile,
+  connected,
+  protocol,
+  host,
+  port,
+}: HomeProps) => {
   const navigate = useNavigate();
   const [showCreateConversation, setShowCreateConversation] = useState(false);
   const [members, setMembers] = useState(""); // Comma separated list of members
@@ -58,6 +67,7 @@ const Home = ({ username, userId, socket, isMobile, connected }: HomeProps) => {
   useEffect(() => {
     socket.emit("join-user-room");
     fetchConversations({
+      protocol,
       host,
       port,
       navigateLogin,
@@ -91,15 +101,10 @@ const Home = ({ username, userId, socket, isMobile, connected }: HomeProps) => {
 
   const navigateLogin = () => {
     socket.disconnect();
-    fetch(
-      `${
-        import.meta.env.MODE === "production" ? "https" : "http"
-      }://${host}:${port}/api/logout`,
-      {
-        method: "DELETE",
-        credentials: "include",
-      }
-    );
+    fetch(`${protocol}://${host}:${port}/api/logout`, {
+      method: "DELETE",
+      credentials: "include",
+    });
     localStorage.clear();
     setAccessToken("");
     navigate("/login");
@@ -169,6 +174,7 @@ const Home = ({ username, userId, socket, isMobile, connected }: HomeProps) => {
 
   const onClickConversation = async (entry: SidebarEntryProps) => {
     const fetchMessagesItems = {
+      protocol,
       host,
       port,
       conversationId: entry._id,

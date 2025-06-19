@@ -6,6 +6,7 @@ import Login from "./pages/Login/Login.tsx";
 import socket from "./lib/socket.ts";
 import Home from "./pages/Home/Home.tsx";
 
+const protocol = import.meta.env.MODE === "production" ? "https" : "http";
 const host = import.meta.env.VITE_SERVER_IP;
 const port = import.meta.env.VITE_SERVER_PORT;
 
@@ -83,6 +84,9 @@ const App = () => {
     socket,
     isMobile,
     connected,
+    protocol,
+    host,
+    port,
   };
 
   const loginProps = {
@@ -91,6 +95,9 @@ const App = () => {
     username,
     setUsername,
     setUserId,
+    protocol,
+    host,
+    port,
   };
 
   return (
