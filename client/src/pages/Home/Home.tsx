@@ -262,6 +262,8 @@ const Home = ({
     className: "message-body",
     value: allMessageBodies.get(conversationLoaded?._id ?? ""),
     onChange: handleChange,
+    onClick: () =>
+      isMobile && (setAnimateSidebarWidth(true), setFullWidth(true)),
     onKeyDown: handleKeyDown,
     placeholder: `Message ${
       conversationLoaded?.isDM
