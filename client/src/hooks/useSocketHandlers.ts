@@ -95,6 +95,7 @@ export const useSocketHandlers = ({
           removed.lastMessage = message;
           if (conversationId !== conversationLoadedRef.current?._id) {
             removed.updateAlert = true;
+            removed.newMessageCount = removed.newMessageCount + 1;
             playSound(notifySound);
           }
           updated.unshift(removed);

@@ -20,6 +20,7 @@ interface SidebarProps {
   isMobile: boolean;
   setRenderSidebar: React.Dispatch<React.SetStateAction<boolean>>;
   animateSidebarWidth: boolean;
+  newMessageCount: number;
 }
 
 const Sidebar = ({

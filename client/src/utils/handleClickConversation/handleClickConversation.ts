@@ -52,9 +52,9 @@ export const handleClickConversation = async ({
       (conversation) => conversation._id === entry._id
     );
     currentItems[index].updateAlert = false;
+    currentItems[index].newMessageCount = 0;
     setItems(currentItems);
     if (!allMessages.has(entry._id)) {
-      // TODO Limit loaded messages and implement dynamically loading older messages
       socket.emit("join-conversation", entry._id);
       const currentMessages: MessageProps[] = await fetchMessages(
         fetchMessagesItems

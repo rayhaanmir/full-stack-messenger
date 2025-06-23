@@ -15,6 +15,7 @@ export interface SidebarEntryProps {
   idLoaded?: string | undefined;
   updateAlert?: boolean;
   onClickConversation?: (entry: SidebarEntryProps) => void;
+  newMessageCount: number;
 }
 
 const SidebarEntry = (props: SidebarEntryProps) => {
@@ -30,8 +31,9 @@ const SidebarEntry = (props: SidebarEntryProps) => {
     username,
     showCreateConversation,
     idLoaded,
-    updateAlert,
+    updateAlert = false,
     onClickConversation,
+    newMessageCount = 0,
   } = props;
 
   const entryProps = {
@@ -47,6 +49,11 @@ const SidebarEntry = (props: SidebarEntryProps) => {
     tabIndex: showCreateConversation ? -1 : 0,
     onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) =>
       e.key === "Enter" && onClickConversation?.(props),
+    title: newMessageCount
+      ? newMessageCount === 1
+        ? `1 new message`
+        : `${newMessageCount} new messages`
+      : "",
   };
 
   return (

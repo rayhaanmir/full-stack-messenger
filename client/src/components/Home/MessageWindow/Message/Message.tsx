@@ -26,7 +26,7 @@ const Message = ({
         startMessageAnimation ? " start-animation" : ""
       }`}
     >
-      <strong className="sender-info" title="Click for message info">
+      <strong className="sender-info">
         {`${sender} ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`}:
       </strong>
       <pre className="message-content">{text}</pre>
