@@ -43,7 +43,7 @@ const App = () => {
         err.message === "Access token expired or invalid" ||
         err.message === "Error: No token provided"
       ) {
-        const res = await fetch(`http://${host}:${port}/api/refresh`, {
+        const res = await fetch(`${protocol}://${host}:${port}/api/refresh`, {
           method: "POST",
           credentials: "include",
         });
