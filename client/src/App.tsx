@@ -6,7 +6,7 @@ import Login from "./pages/Login/Login.tsx";
 import socket from "./lib/socket.ts";
 import Home from "./pages/Home/Home.tsx";
 
-const protocol = import.meta.env.MODE === "production" ? "https" : "http";
+const protocol = import.meta.env.VITE_MODE === "production" ? "https" : "http";
 const host = import.meta.env.VITE_SERVER_IP;
 const port = import.meta.env.VITE_SERVER_PORT;
 

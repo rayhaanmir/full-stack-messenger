@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const protocol = import.meta.env.MODE === "production" ? "https" : "http";
+const protocol = import.meta.env.VITE_MODE === "production" ? "https" : "http";
 const host = import.meta.env.VITE_SERVER_IP;
 const port = import.meta.env.VITE_SERVER_PORT;
 
