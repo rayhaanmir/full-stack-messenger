@@ -29,7 +29,7 @@ export const fetchConversations = async ({
       Authorization: `Bearer ${accessToken}`,
     },
   });
-  if (res.status === 401) {
+  if (!res.ok) {
     const refreshRes = await fetch(
       `${protocol}://${host}:${port}/api/refresh`,
       {
@@ -48,7 +48,6 @@ export const fetchConversations = async ({
         },
       });
     } else {
-      localStorage.removeItem("accessToken");
       navigateLogin();
       return;
     }

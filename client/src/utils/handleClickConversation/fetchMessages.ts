@@ -45,16 +45,13 @@ export const fetchMessages = async ({
       },
     }
   );
-  if (res.status === 401 || res.status === 403) {
-    const refreshRes = await fetch(
-      `${protocol}://${host}:${port}/api/refresh`,
-      {
-        method: "POST",
-        credentials: "include",
-      }
-    );
-    if (refreshRes.ok) {
-      const token = await refreshRes.json();
+  if (!res.ok) {
+    res = await fetch(`${protocol}://${host}:${port}/api/refresh`, {
+      method: "POST",
+      credentials: "include",
+    });
+    if (res.ok) {
+      const token = await res.json();
       localStorage.setItem("accessToken", token.accessToken);
       setAccessToken(token.accessToken);
       res = await fetch(
@@ -67,7 +64,6 @@ export const fetchMessages = async ({
         }
       );
     } else {
-      localStorage.removeItem("accessToken");
       navigateLogin();
     }
   }
@@ -75,6 +71,7 @@ export const fetchMessages = async ({
   if (!res.ok) {
     setWarningModalText("Failed to fetch messages");
     setWarningModalOpen(true);
+    return [];
   }
 
   const messages: MessageProps[] = await res.json();
