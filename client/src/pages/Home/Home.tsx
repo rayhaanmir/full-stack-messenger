@@ -9,6 +9,7 @@ import MessageWindow from "../../components/Home/MessageWindow/MessageWindow.tsx
 import TextareaAutosize from "react-textarea-autosize";
 import Modal from "../../components/Home/Modal/Modal.tsx";
 import { FaArrowRight } from "react-icons/fa";
+import { IoIosRepeat } from "react-icons/io";
 import { IoIosSend } from "react-icons/io";
 import { IoIosLogOut } from "react-icons/io";
 import { useSocketHandlers } from "../../hooks/useSocketHandlers.ts";
@@ -108,6 +109,11 @@ const Home = ({
     localStorage.clear();
     setAccessToken("");
     navigate("/login");
+  };
+
+  const navigateChangePassword = () => {
+    setAccessToken("");
+    navigate("/change-password");
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -239,8 +245,8 @@ const Home = ({
     title: "Open the sidebar",
   };
 
-  const logoutIconWrapperProps = {
-    className: "logout-icon-wrapper",
+  const iconWrapperProps = {
+    className: "icon-wrapper",
     tabIndex: -1,
   };
 
@@ -251,6 +257,15 @@ const Home = ({
     onKeyDown: (e: React.KeyboardEvent<SVGElement>) =>
       e.key === "Enter" && navigateLogin(),
     title: "Log out",
+  };
+
+  const changePasswordProps = {
+    className: "change-password-icon",
+    tabIndex: showCreateConversation ? -1 : 0,
+    onClick: navigateChangePassword,
+    onKeyDown: (e: React.KeyboardEvent<SVGElement>) =>
+      e.key === "Enter" && navigateLogin(),
+    title: "Change password",
   };
 
   const messageWindowProps = {
@@ -325,7 +340,9 @@ const Home = ({
               <FaArrowRight />
             </button>
           )}
-          <div {...logoutIconWrapperProps}>
+
+          <div {...iconWrapperProps}>
+            <IoIosRepeat {...changePasswordProps} />
             <IoIosLogOut {...logoutIconProps} />
           </div>
         </div>

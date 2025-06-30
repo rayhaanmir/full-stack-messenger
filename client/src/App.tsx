@@ -5,6 +5,7 @@ import "./App.css";
 import Login from "./pages/Login/Login.tsx";
 import socket from "./lib/socket.ts";
 import Home from "./pages/Home/Home.tsx";
+import ChangePassword from "./pages/ChangePassword/ChangePassword.tsx";
 
 const protocol = import.meta.env.VITE_MODE === "production" ? "https" : "http";
 const host = import.meta.env.VITE_SERVER_IP;
@@ -100,6 +101,13 @@ const App = () => {
     port,
   };
 
+  const changePasswordProps = {
+    socket,
+    isMobile,
+    protocol,
+    host,
+    port,
+  };
   return (
     <BrowserRouter>
       <Routes>
@@ -111,6 +119,16 @@ const App = () => {
             loggedIn ? (
               <Home {...homeProps} />
             ) : accessTokenValid ? null : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/change-password"
+          element={
+            connected ? (
+              <ChangePassword {...changePasswordProps} />
+            ) : (
               <Navigate to="/login" replace />
             )
           }

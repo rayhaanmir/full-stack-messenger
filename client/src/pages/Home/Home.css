@@ -81,20 +81,30 @@
   background-color: #505050;
 }
 
-.logout-icon-wrapper {
+.icon-wrapper {
   display: flex;
   position: absolute;
   right: 0;
   height: 100%;
-  width: 2.5rem;
+  width: fit-content;
   align-items: center;
+  gap: 0.5rem;
 }
 
 .logout-icon {
+  color: white;
   font-size: 2rem;
 }
 
 .logout-icon:hover {
-  
+  cursor: pointer;
+}
+
+.change-password-icon {
+  color: white;
+  font-size: 2.5rem;
+}
+
+.change-password-icon:hover {
   cursor: pointer;
 }

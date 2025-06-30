@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./Login.css";
 import type { Socket } from "socket.io-client";
+import "./Login.css";
 
 interface LoginProps {
-  socket: Socket | null;
+  socket: Socket;
   isMobile: boolean;
   username: string;
   setUsername: React.Dispatch<React.SetStateAction<string>>;
@@ -27,11 +27,11 @@ const Login = ({
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const waitForConnection = (cb: () => void) => {
-    if (socket?.connected) {
+    if (socket.connected) {
       cb();
     } else {
-      socket?.once("connect", cb);
-      socket?.connect();
+      socket.once("connect", cb);
+      socket.connect();
     }
   };
 

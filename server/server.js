@@ -100,7 +100,7 @@ app.post("/api/login", async (req, res) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       maxAge: ms("2w"),
     });
     res.status(200).json({ accessToken, username, userId });
@@ -299,8 +299,8 @@ io.on("connection", async (socket) => {
         console.log(`Saved message "${msg.id}"`);
         io.to(conversationId).emit("receive-message", msg);
         console.log(`Sent message "${msg.id}"`);
-        const conversation = await Conversation.findOneAndUpdate(
-          { _id: conversationId },
+        const conversation = await Conversation.findByIdAndUpdate(
+          conversationId,
           { lastUpdated: time, lastUser: sender, lastMessage: text }
         );
         io.to(conversation.members).emit(
@@ -341,6 +341,27 @@ io.on("connection", async (socket) => {
       } catch (err) {
         console.error(err);
         conversationCreated(false);
+      }
+    }
+  );
+
+  socket.on(
+    "change-password",
+    async (currentPassword, newPassword, success) => {
+      const userId = socket.userInfo.userId;
+      try {
+        const user = await User.findById(userId);
+        if (await user.isValidPassword(currentPassword)) {
+          user.passwordHash = newPassword;
+          await user.save();
+          success(true);
+        } else {
+          console.error("Invalid current password");
+          success(false);
+        }
+      } catch (err) {
+        console.error(err);
+        success(false);
       }
     }
   );

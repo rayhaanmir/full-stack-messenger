@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/change-password", "destination": "/change-password" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }
